@@ -8,6 +8,7 @@ include(Utilities) # Contains functions
 
 # --- Directory paths ---
 set(VISIONWORKBENCH_INSTALL_DIR "" CACHE FILEPATH "Path to the user-built and installed VisionWorkbench")
+set(ISIS_INSTALL_DIR "" CACHE FILEPATH "Path to the pre-compiled, or user-compiled, ISIS installation")
 set(ASP_DEPS_DIR "" CACHE FILEPATH "Path to the conda environment that has the ASP dependencies")
 
 set(ASP_ENABLE_SSE "1" CACHE BOOL "Allow SSE optimizations.")
@@ -18,6 +19,11 @@ endif()
 
 # Where to search for dependencies
 set(CMAKE_PREFIX_PATH "${ASP_DEPS_DIR}")
+
+# Default to the conda environment.
+if ("${ISIS_INSTALL_DIR}" STREQUAL "")
+  set(ISIS_INSTALL_DIR "${ASP_DEPS_DIR}")
+endif()
 
 # # assume built-in pthreads on MacOS
 # IF(APPLE)
@@ -229,11 +235,11 @@ find_external_library(GFLAGS ${ASP_DEPS_DIR} "gflags" "gflags" REQUIRED)
 find_external_library(GLOG ${ASP_DEPS_DIR} "glog" "glog" REQUIRED)
 find_external_library(ARMADILLO ${ASP_DEPS_DIR} "" "armadillo" REQUIRED)
 
-find_external_library(ISIS ${ASP_DEPS_DIR} "isis" "isis" REQUIRED)
+find_external_library(ISIS ${ISIS_INSTALL_DIR} "isis" "isis" REQUIRED)
 
 if(ASP_HAVE_PKG_ISIS)
   # Pull the ISIS version. It is on the first line before the first space.
-  file(STRINGS "${ASP_DEPS_DIR}/version" MY_STRING LIMIT_COUNT 1)
+  file(STRINGS "${ISIS_INSTALL_DIR}/version" MY_STRING LIMIT_COUNT 1)
   string(REPLACE " " ";" MY_LIST ${MY_STRING}) # split by space and store into MY_LIST
   list(GET MY_LIST 0 ASP_ISIS_VERSION)
   set(ASP_HAVE_PKG_ISISIO 1)
