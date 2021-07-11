@@ -58,6 +58,8 @@ Makefile.in
 /src/asp/asp_config.h.pre
 /src/asp/asp_config.h.pre.in
 /src/asp/stamp-h1
+.vscode
+fort.6
 
 # Libtool Stuff
 .libs
