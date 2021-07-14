@@ -10,6 +10,7 @@ include(Utilities) # Contains functions
 set(BINARYBUILDER_INSTALL_DIR "" CACHE FILEPATH "Path to the Binary Builder installation directory containing user-compiled dependencies")
 set(VISIONWORKBENCH_INSTALL_DIR "" CACHE FILEPATH "Path to the user-built and installed VisionWorkbench")
 set(ISIS_INSTALL_DIR "" CACHE FILEPATH "Path to the pre-compiled, or user-compiled, ISIS installation")
+set(CSPICE_INSTALL_DIR "" CACHE FILEPATH "Path to the pre-compiled, or user-compiled, CSPICE installation")
 set(ASP_DEPS_DIR "" CACHE FILEPATH "Path to the conda environment that has the ASP dependencies")
 
 set(ASP_ENABLE_SSE "1" CACHE BOOL "Allow SSE optimizations.")
@@ -25,6 +26,9 @@ endif()
 # Default to the conda environment.
 if ("${ISIS_INSTALL_DIR}" STREQUAL "")
   set(ISIS_INSTALL_DIR "${ASP_DEPS_DIR}")
+endif()
+if ("${CSPICE_INSTALL_DIR}" STREQUAL "")
+  set(CSPICE_INSTALL_DIR "${ASP_DEPS_DIR}")
 endif()
 
 # # assume built-in pthreads on MacOS
@@ -231,7 +235,7 @@ set(ILMBASE_LIB_NAMES Half Iex Imath IlmThread)
 find_external_library(ILMBASE ${ASP_DEPS_DIR} "" "${ILMBASE_LIB_NAMES}" REQUIRED)
 find_external_library(OPENEXR ${ASP_DEPS_DIR} "OpenEXR" "IlmImf;IlmThread" REQUIRED)
 
-find_external_library(SPICE ${ASP_DEPS_DIR} "cspice" "cspice" REQUIRED)
+find_external_library(SPICE ${CSPICE_INSTALL_DIR} "cspice" "cspice" REQUIRED)
 find_external_library(GEOID ${ASP_DEPS_DIR} "" "egm2008" REQUIRED)
 find_external_library(XERCESC ${ASP_DEPS_DIR} "" "xerces-c" REQUIRED)
 find_external_library(PROTOBUF ${ASP_DEPS_DIR} "" "protobuf" REQUIRED)
