@@ -409,7 +409,8 @@ void handle_arguments( int argc, char *argv[], Options& opt ) {
     ("use-surface-sampling", po::bool_switch(&opt.use_surface_sampling)->default_value(false),
      "Use the older algorithm, interpret the point cloud as a surface made up of triangles and interpolate into it (prone to aliasing).")
     ("fsaa",   po::value<int>(&opt.fsaa)->default_value(1),            "Oversampling amount to perform antialiasing (obsolete).")
-    ("no-dem", po::bool_switch(&opt.no_dem)->default_value(false), "Skip writing a DEM.");
+    ("no-dem", po::bool_switch(&opt.no_dem)->default_value(false), "Skip writing a DEM.")
+    ("threads",   po::value<int>(&opt.num_threads)->default_value(1), "Select the number of processors (threads) to use.");
   
   general_options.add( manipulation_options );
   general_options.add( projection_options );

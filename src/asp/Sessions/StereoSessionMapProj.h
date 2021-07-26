@@ -110,10 +110,6 @@ namespace asp {
     virtual std::string name() const { return "isismapisis"; }
     virtual bool uses_rpc_map_projection() const {return false;}
 
-    virtual bool supports_multi_threading() const {
-      return false;
-    }
-
     static StereoSession* construct() { return new StereoSessionIsisMapIsis; }
     
   protected:

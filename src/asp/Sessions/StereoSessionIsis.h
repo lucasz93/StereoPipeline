@@ -37,8 +37,6 @@ namespace asp {
 
     virtual std::string name() const { return "isis"; }
     
-    virtual bool supports_multi_threading() const;
-    
     /// Returns the target datum to use for a given camera model
     virtual vw::cartography::Datum get_datum(const vw::camera::CameraModel* cam,
                                              bool use_sphere_for_datum) const;
