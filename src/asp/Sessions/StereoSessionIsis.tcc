@@ -206,12 +206,6 @@ void write_preprocessed_isis_image( vw::cartography::GdalWriteOptions const& opt
 
 }
 
-
-bool StereoSessionIsis::supports_multi_threading () const {
-  return (asp::CsmModel::file_has_isd_extension(m_left_camera_file ) && 
-          asp::CsmModel::file_has_isd_extension(m_right_camera_file)   );
-}
-
 /// Returns the target datum to use for a given camera model.
 /// Note the parameter use_sphere_for_datum.
 /// During alignment, we'd like to use the most accurate
