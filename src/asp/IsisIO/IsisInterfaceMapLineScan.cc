@@ -40,15 +40,13 @@
 #include <SpiceRotation.h>
 #include <iTime.h>
 
-#include <boost/smart_ptr/scoped_ptr.hpp>
-
 using namespace vw;
 using namespace asp;
 using namespace asp::isis;
 
 // Constructor
 IsisInterfaceMapLineScan::IsisInterfaceMapLineScan( std::string const& filename ) :
-  IsisInterface( filename ){//, m_projection( Isis::ProjectionFactory::CreateFromCube(*m_label) ) {
+  IsisInterfaceContext( filename ){//, m_projection( Isis::ProjectionFactory::CreateFromCube(*m_label) ) {
 
   Isis::TProjection* tempProj = (Isis::TProjection*)Isis::ProjectionFactory::CreateFromCube(*m_label);
   m_projection.reset(tempProj);

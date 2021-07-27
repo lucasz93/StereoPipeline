@@ -36,7 +36,7 @@ using namespace asp;
 using namespace asp::isis;
 
 // Construct
-IsisInterfaceLineScan::IsisInterfaceLineScan( std::string const& filename ) : IsisInterface(filename), m_alphacube( *m_cube ) {
+IsisInterfaceLineScan::IsisInterfaceLineScan( std::string const& filename ) : IsisInterfaceContext(filename), m_alphacube( *m_cube ) {
 
   // Gutting Isis::Camera
   m_distortmap = m_camera->DistortionMap();

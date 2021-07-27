@@ -36,7 +36,7 @@ using namespace asp::isis;
 
 // Constructor
 IsisInterfaceMapFrame::IsisInterfaceMapFrame( std::string const& filename ) :
-  IsisInterface(filename){// , m_projection( Isis::ProjectionFactory::CreateFromCube( *m_label ) ) {
+  IsisInterfaceContext(filename){// , m_projection( Isis::ProjectionFactory::CreateFromCube( *m_label ) ) {
 
   Isis::TProjection* tempProj = (Isis::TProjection*)Isis::ProjectionFactory::CreateFromCube(*m_label);
   m_projection.reset(tempProj);
