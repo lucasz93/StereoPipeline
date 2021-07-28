@@ -101,14 +101,6 @@ namespace camera {
       return m_interface->target_name();
     }
 
-    bool allocate_context() override {
-      return m_interface->allocate_context();
-    }
-
-    void free_context() override {
-      m_interface->free_context();
-    }
-
   protected:
     boost::shared_ptr<asp::isis::IsisInterface> m_interface;
 

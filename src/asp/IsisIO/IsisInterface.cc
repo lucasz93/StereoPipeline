@@ -42,85 +42,18 @@ using namespace vw;
 using namespace asp;
 using namespace asp::isis;
 
-// Thread safe implementation
-  // Maintains a cache of IsisInterface contexts that threads can
-  // allocate and use for their lifetime.
-  // -------------------------------------------------------
+IsisInterface::IsisInterface( std::string const& file ) {
+  // Opening labels and camera
+  Isis::FileName ifilename( QString::fromStdString(file) );
+  m_label.reset( new Isis::Pvl() );
+  m_label->read( ifilename.expanded() );
 
-  template<typename T>
-  class LruIsisInterface : public IsisInterface {
-  public:
-    LruIsisInterface( std::string const& file ) : m_file(file) {}
+  // Opening Isis::Camera
+  m_cube.reset( new Isis::Cube(QString::fromStdString(file)) );
+  m_camera.reset(Isis::CameraFactory::Create( *m_cube ));
+}
 
-    std::string type() override { return get_context().type(); }
-    std::ostream& print( std::ostream& os ) override { return get_context().print(os); }
-
-    // Standard Methods
-    //------------------------------------------------------
-
-    // These are the standard camera request; IsisInterface allows for
-    // them to be customized for the type of camera so that they are
-    // fast and not too full of conditionals.
-
-    vw::Vector2 point_to_pixel ( vw::Vector3 const& point               ) const override { return get_context().point_to_pixel(point); }
-    vw::Vector3 pixel_to_vector( vw::Vector2 const& pix                 ) const override { return get_context().pixel_to_vector(pix); }
-    vw::Vector3 camera_center  ( vw::Vector2 const& pix = vw::Vector2() ) const override { return get_context().camera_center(pix); }
-    vw::Quat    camera_pose    ( vw::Vector2 const& pix = vw::Vector2() ) const override { return get_context().camera_pose(pix); }
-
-    // General information
-    //------------------------------------------------------
-    int         lines         () const override { return get_context().lines(); }
-    int         samples       () const override { return get_context().samples(); }
-    std::string serial_number () const override { return get_context().serial_number(); }
-    double      ephemeris_time( vw::Vector2 const& pix ) const override { return get_context().ephemeris_time(pix); }
-    vw::Vector3 sun_position  ( vw::Vector2 const& pix = vw::Vector2() ) const override { return get_context().sun_position(pix); }
-    vw::Vector3 target_radii  () const override { return get_context().target_radii(); }
-    std::string target_name   () const override { return get_context().target_name(); }
-
-  protected:
-    // Context lifecycle
-    //------------------------------------------------------
-    friend class IsisInterfaceClient;
-
-    bool allocate_context() override {
-      auto thread_id = vw::Thread::id();
-
-      // Prevent recursive allocations.
-      {
-        vw::Mutex::ReadLock lock(m_mutex);
-        if (m_contexts.find(thread_id) != m_contexts.end())
-          return false;
-      }
-
-      vw::Mutex::WriteLock lock(m_mutex);
-      m_contexts[thread_id].reset(new T(m_file));
-      return true;
-    }
-
-    void free_context() override {
-      auto thread_id = vw::Thread::id();
-  
-      vw::Mutex::WriteLock lock(m_mutex);
-      m_contexts.erase(thread_id);
-    }
-
-    T&   get_context() const {
-      auto thread_id = vw::Thread::id();
-
-      vw::Mutex::ReadLock lock(m_mutex);
-      auto it = m_contexts.find(thread_id);
-      if (it == m_contexts.end())
-        throw std::runtime_error("IsisInterface doesn't exist for this thread. Acquire the IsisInterface object with a IsisInterfaceClient.");
-
-      return *it->second.get();
-    }
-
-    // Standard Variables
-    //------------------------------------------------------
-    std::string                                m_file;
-    std::map<vw::uint64, boost::scoped_ptr<T>> m_contexts;
-    mutable vw::Mutex                          m_mutex;
-  };
+IsisInterface::~IsisInterface() {}
 
 IsisInterface* IsisInterface::open( std::string const& filename ) {
   // Opening Labels (This should be done somehow though labels)
@@ -138,16 +71,16 @@ IsisInterface* IsisInterface::open( std::string const& filename ) {
   case 0:
     // Framing Camera
     if ( camera->HasProjection() )
-      result = new LruIsisInterface<IsisInterfaceMapFrame>( filename );
+      result = new IsisInterfaceMapFrame( filename );
     else
-      result = new LruIsisInterface<IsisInterfaceFrame>( filename );
+      result = new IsisInterfaceFrame( filename );
     break;
   case 2:
     // Linescan Camera
     if ( camera->HasProjection() )
-      result = new LruIsisInterface<IsisInterfaceMapLineScan>( filename );
+      result = new IsisInterfaceMapLineScan( filename );
     else
-      result = new LruIsisInterface<IsisInterfaceLineScan>( filename );
+      result = new IsisInterfaceLineScan( filename );
     break;
   default:
     vw_throw( NoImplErr() << "Don't support Isis Camera Type " << camera->GetCameraType() << " at this moment" );
@@ -156,45 +89,32 @@ IsisInterface* IsisInterface::open( std::string const& filename ) {
   return result;
 }
 
-IsisInterfaceContext::IsisInterfaceContext( std::string const& file ) {
-  // Opening labels and camera
-  Isis::FileName ifilename( QString::fromStdString(file) );
-  m_label.reset( new Isis::Pvl() );
-  m_label->read( ifilename.expanded() );
-
-  // Opening Isis::Camera
-  m_cube.reset( new Isis::Cube(QString::fromStdString(file)) );
-  m_camera.reset(Isis::CameraFactory::Create( *m_cube ));
-}
-
-IsisInterfaceContext::~IsisInterfaceContext() {}
-
-int IsisInterfaceContext::lines() const {
+int IsisInterface::lines() const {
   return m_camera->Lines();
 }
 
-int IsisInterfaceContext::samples() const {
+int IsisInterface::samples() const {
   return m_camera->Samples();
 }
 
-std::string IsisInterfaceContext::serial_number() const {
+std::string IsisInterface::serial_number() const {
   Isis::Pvl copy( *m_label );
   return Isis::SerialNumber::Compose( copy, true ).toStdString();
 }
 
-double IsisInterfaceContext::ephemeris_time( vw::Vector2 const& pix ) const {
+double IsisInterface::ephemeris_time( vw::Vector2 const& pix ) const {
   m_camera->SetImage( pix[0]+1, pix[1]+1 );
   return m_camera->time().Et();
 }
 
-vw::Vector3 IsisInterfaceContext::sun_position( vw::Vector2 const& pix ) const {
+vw::Vector3 IsisInterface::sun_position( vw::Vector2 const& pix ) const {
   m_camera->SetImage( pix[0]+1, pix[1]+1 );
   Vector3 sun;
   m_camera->sunPosition( &sun[0] );
   return sun * 1000;
 }
 
-vw::Vector3 IsisInterfaceContext::target_radii() const {
+vw::Vector3 IsisInterface::target_radii() const {
   Isis::Distance radii[3];
   m_camera->radii(radii);
   return Vector3( radii[0].meters(),
@@ -202,22 +122,18 @@ vw::Vector3 IsisInterfaceContext::target_radii() const {
                   radii[2].meters() );
 }
 
-std::string IsisInterfaceContext::target_name() const {
+std::string IsisInterface::target_name() const {
   return m_camera->target()->name().toStdString();
 }
 
 std::ostream& asp::isis::operator<<( std::ostream& os, IsisInterface* i ) {
-  return i->print(os);
-}
-
-std::ostream& IsisInterfaceContext::print( std::ostream& os ) {
-  os << "IsisInterface" << this->type()
-       << "( Serial=" << this->serial_number()
+  os << "IsisInterface" << i->type()
+       << "( Serial=" << i->serial_number()
        << std::setprecision(9)
-       << ", f=" << m_camera->FocalLength()
-       << " mm, pitch=" << m_camera->PixelPitch()
+       << ", f=" << i->m_camera->FocalLength()
+       << " mm, pitch=" << i->m_camera->PixelPitch()
        << " mm/px," << std::setprecision(6)
-       << "Center=" << this->camera_center() << " )";
+       << "Center=" << i->camera_center() << " )";
     return os;
 }
 

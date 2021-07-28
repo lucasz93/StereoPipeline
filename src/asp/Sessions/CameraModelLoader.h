@@ -30,7 +30,7 @@ namespace asp {
   class CameraModelLoader {
   public:
 
-    typedef boost::shared_ptr<vw::camera::CameraModel> CameraModelPtr;
+    typedef boost::shared_ptr<vw::camera::CameraModelAllocator> CameraModelAllocatorPtr;
 
     // Setup/teardown code is handled here
     // - Currently this just means the Xerces XML init/deinit functions.
@@ -40,14 +40,14 @@ namespace asp {
     // TODO: Add a generic loading function.
 
     // Camera model loading functions
-    CameraModelPtr load_rpc_camera_model        (std::string const& path) const;
-    CameraModelPtr load_dg_camera_model         (std::string const& path) const;
-    CameraModelPtr load_pinhole_camera_model    (std::string const& path) const;
-    CameraModelPtr load_isis_camera_model       (std::string const& path) const;
-    CameraModelPtr load_spot5_camera_model      (std::string const& path) const;
-    CameraModelPtr load_ASTER_camera_model      (std::string const& path) const;
-    CameraModelPtr load_optical_bar_camera_model(std::string const& path) const;
-    CameraModelPtr load_csm_camera_model        (std::string const& path) const;
+    CameraModelAllocatorPtr load_rpc_camera_model        (std::string const& path) const;
+    CameraModelAllocatorPtr load_dg_camera_model         (std::string const& path) const;
+    CameraModelAllocatorPtr load_pinhole_camera_model    (std::string const& path) const;
+    CameraModelAllocatorPtr load_isis_camera_model       (std::string const& path) const;
+    CameraModelAllocatorPtr load_spot5_camera_model      (std::string const& path) const;
+    CameraModelAllocatorPtr load_ASTER_camera_model      (std::string const& path) const;
+    CameraModelAllocatorPtr load_optical_bar_camera_model(std::string const& path) const;
+    CameraModelAllocatorPtr load_csm_camera_model        (std::string const& path) const;
   }; // End class CameraModelLoader
 
 } // end namespace asp

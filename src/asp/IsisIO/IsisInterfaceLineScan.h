@@ -40,7 +40,7 @@ namespace Isis {
 namespace asp {
 namespace isis {
 
-  class IsisInterfaceLineScan : public IsisInterfaceContext {
+  class IsisInterfaceLineScan : public IsisInterface {
 
   public:
     IsisInterfaceLineScan( std::string const& file );

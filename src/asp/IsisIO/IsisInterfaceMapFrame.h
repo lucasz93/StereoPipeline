@@ -42,7 +42,7 @@ namespace asp {
 namespace isis {
 
   /// ??
-  class IsisInterfaceMapFrame : public IsisInterfaceContext {
+  class IsisInterfaceMapFrame : public IsisInterface {
 
   public:
     IsisInterfaceMapFrame( std::string const& file );

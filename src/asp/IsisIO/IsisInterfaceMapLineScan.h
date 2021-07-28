@@ -35,7 +35,7 @@
 namespace asp {
 namespace isis {
 
-  class IsisInterfaceMapLineScan : public IsisInterfaceContext {
+  class IsisInterfaceMapLineScan : public IsisInterface {
 
   public:
     IsisInterfaceMapLineScan( std::string const& file );

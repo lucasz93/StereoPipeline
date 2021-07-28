@@ -28,7 +28,6 @@
 #include <Cube.h>
 #include <vw/Math/Vector.h>
 #include <vw/Math/Quaternion.h>
-#include <vw/Core/Thread.h>
 
 namespace Isis {
   class Pvl;
@@ -43,8 +42,11 @@ namespace isis {
 
   class IsisInterface {
   public:
+    IsisInterface( std::string const& file );
+    virtual ~IsisInterface(); // Can't be declared here since we have
+                              // incomplete types from Isis.
+
     virtual std::string type() = 0;
-    virtual std::ostream& print( std::ostream& ) = 0;
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
     static IsisInterface* open( std::string const& filename );
@@ -61,20 +63,23 @@ namespace isis {
     virtual vw::Vector3 camera_center  ( vw::Vector2 const& pix = vw::Vector2() ) const = 0;
     virtual vw::Quat    camera_pose    ( vw::Vector2 const& pix = vw::Vector2() ) const = 0;
 
-    virtual bool allocate_context() = 0;
-    virtual void free_context() = 0;
-
     // General information
     //------------------------------------------------------
-    virtual int         lines         () const = 0;
-    virtual int         samples       () const = 0;
-    virtual std::string serial_number () const = 0;
-    virtual double      ephemeris_time( vw::Vector2 const& pix ) const = 0;
-    virtual vw::Vector3 sun_position  ( vw::Vector2 const& pix = vw::Vector2() ) const = 0;
-    virtual vw::Vector3 target_radii  () const = 0;
-    virtual std::string target_name   () const = 0;
+    int         lines         () const;
+    int         samples       () const;
+    std::string serial_number () const;
+    double      ephemeris_time( vw::Vector2 const& pix ) const;
+    vw::Vector3 sun_position  ( vw::Vector2 const& pix = vw::Vector2() ) const;
+    vw::Vector3 target_radii  () const;
+    std::string target_name   () const;
 
-  private:
+  protected:
+    // Standard Variables
+    //------------------------------------------------------
+    boost::scoped_ptr<Isis::Pvl   > m_label;
+    boost::scoped_ptr<Isis::Camera> m_camera;
+    boost::scoped_ptr<Isis::Cube  > m_cube;
+
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
 
@@ -83,40 +88,6 @@ namespace isis {
   std::ostream& operator<<( std::ostream& os, IsisInterface* i );
 
   bool IsisEnv();
-
-  // Base class of the actual IsisInterfaces.
-  // These classes must be thread safe, i.e. entirely self contained.
-  // -------------------------------------------------------
-
-  class IsisInterfaceContext : public IsisInterface {
-  public:
-    IsisInterfaceContext( std::string const& file );
-    virtual ~IsisInterfaceContext(); // Can't be declared here since we have
-                                     // incomplete types from Isis.
-
-    std::ostream& print( std::ostream& ) override;
-
-    bool allocate_context() { return false; }
-    void free_context() {}
-
-    // General information
-    //------------------------------------------------------
-    int         lines         () const override;
-    int         samples       () const override;
-    std::string serial_number () const override;
-    double      ephemeris_time( vw::Vector2 const& pix ) const override;
-    vw::Vector3 sun_position  ( vw::Vector2 const& pix = vw::Vector2() ) const override;
-    vw::Vector3 target_radii  () const override;
-    std::string target_name   () const override;
-
-  protected:
-
-    // Standard Variables
-    //------------------------------------------------------
-    boost::scoped_ptr<Isis::Pvl   > m_label;
-    boost::scoped_ptr<Isis::Camera> m_camera;
-    boost::scoped_ptr<Isis::Cube  > m_cube;
-  };
 }}
 
 #endif//__ASP_ISIS_INTERFACE_H__
