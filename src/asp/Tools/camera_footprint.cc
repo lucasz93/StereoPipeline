@@ -138,7 +138,8 @@ int main( int argc, char *argv[] ) {
       vw_throw( ArgumentErr() << "Missing input camera.\n" );
 
    
-    boost::shared_ptr<CameraModel> cam = session->camera_model(opt.image_file, opt.camera_file);
+    auto cam_allocator = session->camera_model(opt.image_file, opt.camera_file);
+    auto cam = cam_allocator->allocate();
 
     // The input nodata value
     float input_nodata_value = -std::numeric_limits<float>::max(); 

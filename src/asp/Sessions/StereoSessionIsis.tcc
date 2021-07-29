@@ -232,7 +232,7 @@ vw::cartography::Datum StereoSessionIsis::get_datum(const vw::camera::CameraMode
 
 // TODO: Can we share more code with the DG implementation?
 
-boost::shared_ptr<vw::camera::CameraModel>
+vw::camera::CameraModelAllocatorPtr
 StereoSessionIsis::load_camera_model
       (std::string const& image_file, std::string const& camera_file, Vector2 pixel_offset) const{
 

@@ -59,7 +59,7 @@ namespace asp {
 		     std::vector< std::vector<vw::Vector3> > const& world_sight_mat,
 		     std::vector<vw::Vector3>                const& sat_pos,
 		     vw::Vector2                             const& image_size,
-		     boost::shared_ptr<vw::camera::CameraModelAllocator> rpc_allocator);
+		     vw::camera::CameraModelAllocatorPtr rpc_allocator);
     
     virtual ~ASTERCameraModel() {}
     virtual std::string type() const { return "LinescanASTER"; }
@@ -77,7 +77,7 @@ namespace asp {
     
     vw::Vector3 pixel_to_vector(vw::Vector2 const& pixel) const;
 
-    boost::shared_ptr<vw::camera::CameraModel> get_rpc_model() { return m_rpc_model;}
+    vw::camera::CameraModelAllocatorPtr get_rpc_allocator() { return m_rpc_allocator;}
     
   protected:
 
@@ -88,7 +88,7 @@ namespace asp {
     vw::Vector2                             m_image_size;
     vw::camera::LinearPiecewisePositionInterpolation m_interp_sat_pos;
     vw::camera::SlerpGridPointingInterpolation m_interp_sight_mat;
-    boost::shared_ptr<vw::camera::CameraModelAllocator> m_rpc_allocator; // rpc approx, for initial guess
+    vw::camera::CameraModelAllocatorPtr m_rpc_allocator; // rpc approx, for initial guess
   }; // End class ASTERCameraModel
 
 
@@ -97,7 +97,7 @@ namespace asp {
   ///   make sure this is done before/after this function is called!
   boost::shared_ptr<ASTERCameraModel>
   load_ASTER_camera_model_from_xml(std::string const& path,
-				   boost::shared_ptr<vw::camera::CameraModelAllocator> rpc_allocator);
+				   vw::camera::CameraModelAllocatorPtr rpc_allocator);
 
 }      // namespace asp
 

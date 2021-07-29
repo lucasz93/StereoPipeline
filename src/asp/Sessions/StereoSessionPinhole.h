@@ -73,7 +73,7 @@ namespace asp {
 
 
     /// Pinhole camera model loading function which handles the case of epipolar alignment.
-    static boost::shared_ptr<vw::camera::CameraModel>
+    static vw::camera::CameraModelAllocatorPtr
     load_adj_pinhole_model(std::string const& image_file,      std::string const& camera_file,
                            std::string const& left_image_file,  std::string const& right_image_file,
                            std::string const& left_camera_file, std::string const& right_camera_file,
@@ -94,9 +94,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const;
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const;
  private:
     /// Helper function for determining image alignment.
     /// - Only used in pre_preprocessing_hook()

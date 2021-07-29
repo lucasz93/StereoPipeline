@@ -64,7 +64,7 @@ CameraModelLoader::~CameraModelLoader()
 
 CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_pinhole_camera_model(std::string const& path) const
 {
-  return boost::make_shared<CameraModelNoAllocator>(vw::camera::load_pinhole_camera_model(path));
+  return CameraModelNoAllocator::create(vw::camera::load_pinhole_camera_model(path));
 }
 
 // Load an RPC camera file
@@ -85,7 +85,7 @@ CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_rpc_camera_mo
   
   // We don't catch an error here because the user will need to
   // know of a failure at this point.
-  return boost::make_shared<CameraModelNoAllocator>(rpc_model);
+  return CameraModelNoAllocator::create(CameraModelPtr(rpc_model));
 }
 
 
@@ -93,14 +93,14 @@ CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_rpc_camera_mo
 CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_dg_camera_model(std::string const& path) const
 {
   // Redirect to the call from LinescanDGModel.h file
-  return boost::make_shared<CameraModelNoAllocator>(load_dg_camera_model_from_xml(path));
+  return CameraModelNoAllocator::create(load_dg_camera_model_from_xml(path));
 }
 
 // Load a spot5 camera file
 CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_spot5_camera_model(std::string const& path) const
 {
   // Redirect to the call from LinescanSpotModel.h file
-  return boost::make_shared<CameraModelNoAllocator>(load_spot5_camera_model_from_xml(path));
+  return CameraModelNoAllocator::create(load_spot5_camera_model_from_xml(path));
 }
 
 // Load a ASTER camera file
@@ -110,7 +110,7 @@ CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_ASTER_camera_
   auto rpc_allocator = load_rpc_camera_model(path);
   
   // Redirect to the call from LinescanASTERModel.h file
-  return boost::make_shared<CameraModelNoAllocator>(load_ASTER_camera_model_from_xml(path, rpc_allocator));
+  return CameraModelNoAllocator::create(load_ASTER_camera_model_from_xml(path, rpc_allocator));
 }
 
 // Load an ISIS camera model
@@ -119,9 +119,9 @@ CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_isis_camera_m
 #if defined(ASP_HAVE_PKG_ISISIO) && ASP_HAVE_PKG_ISISIO == 1
   std::string ext = vw::get_extension(path);
   if (asp::CsmModel::file_has_isd_extension(path)) // Community Sensor Model
-    return boost::make_shared<CameraModelNoAllocator>(new asp::CsmModel(path));
+    return CameraModelNoAllocator::create(CameraModelPtr(new asp::CsmModel(path)));
   else // Should be a .cub extension.
-    return boost::make_shared<CameraModelLruAllocator>([path](){ return new IsisCameraModel(path); });
+    return CameraModelLruAllocator::create([path](){ return new IsisCameraModel(path); });
 #endif
   // If ISIS was not enabled in the build, just throw an exception.
   vw::vw_throw( vw::NoImplErr() << "\nCannot load ISIS files because ISIS was not enabled in the build!.\n");
@@ -131,14 +131,14 @@ CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_isis_camera_m
 // Load an optical bar camera file
 CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_optical_bar_camera_model(std::string const& path) const
 {
-  return boost::make_shared<CameraModelNoAllocator>(new asp::camera::OpticalBarModel(path));
+  return CameraModelNoAllocator::create(CameraModelPtr(new asp::camera::OpticalBarModel(path)));
 }
 
 
 // Load a CSM camera file
 CameraModelLoader::CameraModelAllocatorPtr CameraModelLoader::load_csm_camera_model(std::string const& path) const
 {
-  return boost::make_shared<CameraModelNoAllocator>(new asp::CsmModel(path));
+  return CameraModelNoAllocator::create(CameraModelPtr(new asp::CsmModel(path)));
 }
 
 } // end namespace asp

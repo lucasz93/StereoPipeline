@@ -205,7 +205,8 @@ void generate_point_pairs(RPC_gen_Options opt,
     typedef boost::scoped_ptr<asp::StereoSession> SessionPtr;
     SessionPtr session(asp::StereoSessionFactory::create
                        (session_name, opt, "", "", opt.camera_model, opt.camera_model, ""));
-    boost::shared_ptr<camera::CameraModel> cam_dg(session->camera_model("", opt.camera_model));
+    auto cam_dg_alloc = session->camera_model("", opt.camera_model);
+    auto cam_dg = cam_dg_alloc->allocate();
 
     // Load up the RPC camera model from the camera file
     RPCXML xml;

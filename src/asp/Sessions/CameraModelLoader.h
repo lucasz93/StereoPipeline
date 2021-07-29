@@ -30,7 +30,7 @@ namespace asp {
   class CameraModelLoader {
   public:
 
-    typedef boost::shared_ptr<vw::camera::CameraModelAllocator> CameraModelAllocatorPtr;
+    typedef vw::camera::CameraModelAllocatorPtr CameraModelAllocatorPtr;
 
     // Setup/teardown code is handled here
     // - Currently this just means the Xerces XML init/deinit functions.

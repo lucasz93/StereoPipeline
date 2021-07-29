@@ -47,14 +47,14 @@ namespace fs = boost::filesystem;
 namespace asp {
 
   /// Fetch the RPC models for aster. We want to use those, for ip matching, as they are faster.
-  void StereoSessionASTER::camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                                         boost::shared_ptr<vw::camera::CameraModel> &cam2){
+  void StereoSessionASTER::camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                                         vw::camera::CameraModelAllocatorPtr &cam2){
 
-    boost::shared_ptr<vw::camera::CameraModel> base_cam1, base_cam2;
+    vw::camera::CameraModelAllocatorPtr base_cam1, base_cam2;
     this->camera_models(base_cam1, base_cam2);
 
     // Strip the adjustments
-    boost::shared_ptr<vw::camera::CameraModel> unadj_cam1, unadj_cam2;
+    vw::camera::CameraModelAllocatorPtr unadj_cam1, unadj_cam2;
     AdjustedCameraModel* adj_cam1 = dynamic_cast<AdjustedCameraModel*>(base_cam1.get());
     if (adj_cam1 == NULL) unadj_cam1 = base_cam1;
     else                  unadj_cam1 = adj_cam1->unadjusted_model();

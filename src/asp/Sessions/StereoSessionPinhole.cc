@@ -49,7 +49,7 @@ using namespace vw::camera;
 //       Why does the Pinhole Session need to use something different?
 
 
-boost::shared_ptr<vw::camera::CameraModel>
+vw::camera::CameraModelAllocatorPtr
 asp::StereoSessionPinhole::load_camera_model
   (std::string const& image_file, std::string const& camera_file, Vector2 pixel_offset) const{
 
@@ -278,7 +278,7 @@ void StereoSessionPinhole::get_unaligned_camera_models(
 }
 
 
-boost::shared_ptr<vw::camera::CameraModel>
+vw::camera::CameraModelAllocatorPtr
 StereoSessionPinhole::load_adj_pinhole_model(std::string const& image_file,       std::string const& camera_file,
                                              std::string const& left_image_file,  std::string const& right_image_file,
                                              std::string const& left_camera_file, std::string const& right_camera_file,

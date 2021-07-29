@@ -28,7 +28,7 @@ ASTERCameraModel::ASTERCameraModel(std::vector< std::vector<vw::Vector2> > const
 				   std::vector< std::vector<vw::Vector3> > const& world_sight_mat,
 				   std::vector<vw::Vector3>                const& sat_pos,
 				   vw::Vector2                             const& image_size,
-				   boost::shared_ptr<vw::camera::CameraModelAllocator> rpc_allocator):
+				   vw::camera::CameraModelAllocatorPtr rpc_allocator):
   m_lattice_mat(lattice_mat), m_sight_mat(sight_mat),
   m_world_sight_mat(world_sight_mat),
   m_sat_pos(sat_pos), m_image_size(image_size), m_rpc_allocator(rpc_allocator){
@@ -240,7 +240,7 @@ vw::Vector3 ASTERCameraModel::pixel_to_vector(vw::Vector2 const& pixel) const{
     
   boost::shared_ptr<ASTERCameraModel>
   load_ASTER_camera_model_from_xml(std::string const& path,
-				   boost::shared_ptr<vw::camera::CameraModelAllocator> rpc_allocator){
+				   vw::camera::CameraModelAllocatorPtr rpc_allocator){
 
   // XYZ coordinates are in the ITRF coordinate frame which means GCC coordinates.
   // - The velocities are in the same coordinate frame, not in some local frame.
