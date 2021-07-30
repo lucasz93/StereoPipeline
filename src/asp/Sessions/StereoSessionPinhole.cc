@@ -167,7 +167,7 @@ void asp::StereoSessionPinhole::pre_preprocessing_hook(bool adjust_left_image_si
     vw_out() << "\t--> Performing epipolar alignment\n";
 
     // Load the two images and fetch the two camera models
-    boost::shared_ptr<camera::CameraModel> left_cam, right_cam;
+    vw::camera::CameraModelAllocatorPtr left_cam, right_cam;
 
     if ( boost::ends_with(lcase_file, ".pinhole") ||
          boost::ends_with(lcase_file, ".tsai"   )   ) {
@@ -261,8 +261,8 @@ namespace asp {
 
 
 void StereoSessionPinhole::get_unaligned_camera_models(
-                                 boost::shared_ptr<vw::camera::CameraModel> &left_cam,
-                                 boost::shared_ptr<vw::camera::CameraModel> &right_cam) const{
+                                 vw::camera::CameraModelAllocatorPtr &left_cam,
+                                 vw::camera::CameraModelAllocatorPtr &right_cam) const{
 
   // Retrieve the pixel offset (if any) to cropped images
   vw::Vector2 left_pixel_offset  = camera_pixel_offset(m_input_dem, m_left_image_file,
@@ -271,9 +271,10 @@ void StereoSessionPinhole::get_unaligned_camera_models(
                                                        m_right_image_file, m_right_image_file);
 
   // Load the camera models adjusted for cropping
-  left_cam  = load_adjusted_model(vw::camera::load_pinhole_camera_model(m_left_camera_file),
+  CameraModelLoader loader;
+  left_cam  = load_adjusted_model(loader.load_pinhole_camera_model(m_left_camera_file),
                                   m_left_image_file, m_left_camera_file, left_pixel_offset);
-  right_cam = load_adjusted_model(vw::camera::load_pinhole_camera_model(m_right_camera_file),
+  right_cam = load_adjusted_model(loader.load_pinhole_camera_model(m_right_camera_file),
                                   m_right_image_file, m_right_camera_file, right_pixel_offset);
 }
 
@@ -294,7 +295,8 @@ StereoSessionPinhole::load_adj_pinhole_model(std::string const& image_file,     
 
   if ( stereo_settings().alignment_method != "epipolar" ) {
     // Not epipolar, just load the camera model.
-    return load_adjusted_model(vw::camera::load_pinhole_camera_model(camera_file),
+    CameraModelLoader loader;
+    return load_adjusted_model(loader.load_pinhole_camera_model(camera_file),
                                image_file, camera_file, pixel_offset);
   }
   // Otherwise handle the epipolar case
@@ -332,9 +334,9 @@ StereoSessionPinhole::load_adj_pinhole_model(std::string const& image_file,     
                                    epi_size1, epi_size2);
 
     if (is_left_camera)
-      return load_adjusted_model(epipolar_left_pin, image_file, camera_file, pixel_offset);
+      return load_adjusted_model(CameraModelNoAllocator::create(epipolar_left_pin), image_file, camera_file, pixel_offset);
     // Right camera
-    return load_adjusted_model(epipolar_right_pin, image_file, camera_file, pixel_offset);
+    return load_adjusted_model(CameraModelNoAllocator::create(epipolar_right_pin), image_file, camera_file, pixel_offset);
        
   } else { // Not PinholeModel, use CAHV epipolar code.
 
@@ -349,9 +351,9 @@ StereoSessionPinhole::load_adj_pinhole_model(std::string const& image_file,     
              *epipolar_left_cahv, *epipolar_right_cahv);
 
     if (is_left_camera)
-      return load_adjusted_model(epipolar_left_cahv, image_file, camera_file, pixel_offset);
+      return load_adjusted_model(CameraModelNoAllocator::create(epipolar_left_cahv), image_file, camera_file, pixel_offset);
     // Right camera
-    return load_adjusted_model(epipolar_right_cahv, image_file, camera_file, pixel_offset);
+    return load_adjusted_model(CameraModelNoAllocator::create(epipolar_right_cahv), image_file, camera_file, pixel_offset);
   }
 }
 
@@ -359,8 +361,8 @@ StereoSessionPinhole::load_adj_pinhole_model(std::string const& image_file,     
 
 
 
-void asp::StereoSessionPinhole::camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                                              boost::shared_ptr<vw::camera::CameraModel> &cam2) const{
+void asp::StereoSessionPinhole::camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                                              vw::camera::CameraModelAllocatorPtr &cam2) const{
   vw::Vector2i left_out_size, right_out_size;
   load_camera_models(cam1, cam2, left_out_size, right_out_size);
 }
@@ -368,8 +370,8 @@ void asp::StereoSessionPinhole::camera_models(boost::shared_ptr<vw::camera::Came
 
 
 void asp::StereoSessionPinhole::load_camera_models(
-                   boost::shared_ptr<vw::camera::CameraModel> &left_cam,
-                   boost::shared_ptr<vw::camera::CameraModel> &right_cam,
+                   vw::camera::CameraModelAllocatorPtr &left_cam,
+                   vw::camera::CameraModelAllocatorPtr &right_cam,
                    Vector2i &left_out_size, Vector2i &right_out_size) const{
 
   std::string lcase_file = boost::to_lower_copy(m_left_camera_file);

@@ -41,13 +41,13 @@ public:
   
   /// For ASTER we fetch RPC, for speed
   virtual void camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
-                             vw::camera::CameraModelAllocatorPtr &cam2) override;
+                             vw::camera::CameraModelAllocatorPtr &cam2) const override;
 
 protected:
   /// Function to load a camera model of the particular type.
-  virtual CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
-                                                    std::string const& camera_file,
-                                                    vw::Vector2 pixel_offset) const;
+  virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                std::string const& camera_file,
+                                                                vw::Vector2 pixel_offset) const;
 };
   
 

@@ -326,9 +326,9 @@ namespace asp {
       georef.set_geographic();
 
       vw::camera::CameraModelAllocatorPtr cam = this->camera_model(m_left_image_file,
-                                                                          m_left_camera_file);
+                                                                   m_left_camera_file);
       bool use_sphere_for_datum = true;       // Spherical datum for non-Earth, as done usually
-      georef.set_datum(this->get_datum(cam.get(), use_sphere_for_datum));
+      georef.set_datum(this->get_datum(cam->allocate().get(), use_sphere_for_datum));
     }
 
     return georef;

@@ -509,7 +509,7 @@ void project_image_alpha(Options & opt,
                    GeoReference const& croppedGeoRef,
                    Vector2i     const& virtual_image_size,
                    BBox2i       const& croppedImageBB,
-                   boost::shared_ptr<camera::CameraModel> const& camera_model,
+                   vw::camera::CameraModelAllocatorPtr const& camera_model,
                    Map2CamTransT const& transform) {
 
     // Create handle to input image to be projected on to the map
@@ -807,7 +807,7 @@ int main(int argc, char* argv[]) {
     // so we disable it here.  The check is very important for computing the bounding box safely
     // but we don't really need it when projecting the pixels back in to the camera.
     boost::shared_ptr<vw::camera::PinholeModel> pinhole_ptr = 
-                boost::dynamic_pointer_cast<vw::camera::PinholeModel>(camera_model.get());
+                boost::dynamic_pointer_cast<vw::camera::PinholeModel>(camera_model);
     if (pinhole_ptr)
       pinhole_ptr->set_do_point_to_pixel_check(false);
 
