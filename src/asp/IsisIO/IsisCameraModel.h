@@ -43,7 +43,8 @@ namespace camera {
     // Constructors / Destructors
     //------------------------------------------------------------------
     IsisCameraModel(std::string cube_filename) :
-      m_interface(asp::isis::IsisInterface::open( cube_filename )) {}
+      m_interface(asp::isis::IsisInterface::open( cube_filename )),
+      m_cube_filename(cube_filename) {}
     virtual std::string type() const { return "Isis"; }
 
     //------------------------------------------------------------------
@@ -70,6 +71,10 @@ namespace camera {
     // into world coordinates.
     virtual Quat camera_pose(Vector2 const& pix = Vector2() ) const {
       return m_interface->camera_pose( pix ); }
+
+    virtual boost::shared_ptr<CameraModel> copy() const override {
+      return boost::make_shared<IsisCameraModel>(m_cube_filename);
+    }
 
     // Returns the number of lines is the ISIS cube
     int lines() const { return m_interface->lines(); }
@@ -103,7 +108,8 @@ namespace camera {
 
   protected:
     boost::shared_ptr<asp::isis::IsisInterface> m_interface;
-
+    std::string m_cube_filename;
+    
     friend std::ostream& operator<<( std::ostream&, IsisCameraModel const& );
   };
 

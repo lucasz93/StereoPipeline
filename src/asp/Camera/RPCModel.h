@@ -82,6 +82,10 @@ namespace asp {
     virtual vw::Vector3 pixel_to_vector( vw::Vector2 const& pix   ) const;
     virtual vw::Vector3 camera_center  ( vw::Vector2 const& pix   ) const;
 
+    virtual boost::shared_ptr<CameraModel> copy() const override{
+      return boost::make_shared<RPCModel>(*this);
+    }
+
     static vw::Vector2 normalized_geodetic_to_normalized_pixel
       (vw::Vector3 const& normalized_geodetic,
        CoeffVec    const& line_num_coeff,   CoeffVec const& line_den_coeff,

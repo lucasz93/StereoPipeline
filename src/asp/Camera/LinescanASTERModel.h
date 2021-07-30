@@ -77,6 +77,12 @@ namespace asp {
     
     vw::Vector3 pixel_to_vector(vw::Vector2 const& pixel) const;
 
+    virtual boost::shared_ptr<CameraModel> copy() const override {
+      auto dupe = boost::make_shared<ASTERCameraModel>(*this);
+      dupe->m_rpc_model = m_rpc_model->copy();
+      return dupe;
+    }
+
     boost::shared_ptr<vw::camera::CameraModel> get_rpc_model() { return m_rpc_model;}
     
   protected:

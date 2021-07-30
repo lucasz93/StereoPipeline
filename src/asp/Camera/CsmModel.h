@@ -69,6 +69,10 @@ namespace asp {
       return vw::Quaternion<double>();
     }
 
+    virtual boost::shared_ptr<CameraModel> copy() const override {
+      return boost::make_shared<CsmModel>(*this);
+    }
+
     /// Return true if the path has an extension compatible with CsmModel.
     static bool file_has_isd_extension(std::string const& path);
 

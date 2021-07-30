@@ -298,6 +298,12 @@ namespace asp {
     vw::Vector2 point_to_pixel(vw::Vector3 const& point) const {
       return this->point_to_pixel(point, -1); // Redirect to the function with no guess
     }
+
+    virtual boost::shared_ptr<CameraModel> copy() const override {
+      auto dupe = boost::make_shared<PiecewiseAdjustedLinescanModel>(*this);
+      dupe->m_cam = m_cam->copy();
+      return dupe;
+    }
     
   private:
     AdjustablePosition m_adj_position; 
@@ -477,6 +483,10 @@ namespace asp {
     virtual ~AdjustedLinescanDGModel() {}
 
     virtual std::string type() const { return "AdjustedLinescanDG"; }
+
+    virtual boost::shared_ptr<CameraModel> copy() const override{
+      return boost::make_shared<AdjustedLinescanDGModel>(*this);
+    }
 
     // Need this function to decide which adjustments we need to vary
     // for the given line (image row) position.
