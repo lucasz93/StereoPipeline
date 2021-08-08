@@ -29,6 +29,7 @@
 #include <vw/Camera/CameraModel.h>
 
 // ASP
+#include <asp/Core/Common.h>
 #include <asp/IsisIO/IsisInterface.h>
 
 namespace vw {
@@ -43,8 +44,20 @@ namespace camera {
     // Constructors / Destructors
     //------------------------------------------------------------------
     IsisCameraModel(std::string cube_filename) :
+      m_load_snapshot(new asp::CSpiceSnapshot()),
+      m_snapshot(),
       m_interface(asp::isis::IsisInterface::open( cube_filename )),
       m_cube_filename(cube_filename) {}
+
+    IsisCameraModel(const IsisCameraModel &src) :
+      m_load_snapshot(src.m_load_snapshot),
+      m_snapshot(src.m_snapshot),
+      m_cube_filename(src.m_cube_filename)
+    {
+      asp::CSpicePushSnapshotCopy x(*m_load_snapshot);
+      m_interface.reset(asp::isis::IsisInterface::open( m_cube_filename ));
+    }
+    
     virtual std::string type() const { return "Isis"; }
 
     //------------------------------------------------------------------
@@ -55,54 +68,68 @@ namespace camera {
     //  image plane.  Returns a pixel location (col, row) where the
     //  point appears in the image.
     virtual Vector2 point_to_pixel(Vector3 const& point) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->point_to_pixel( point ); }
 
     // Returns a (normalized) pointing vector from the camera center
     //  through the position of the pixel 'pix' on the image plane.
     virtual Vector3 pixel_to_vector (Vector2 const& pix) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->pixel_to_vector( pix ); }
 
 
     // Returns the position of the focal point of the camera
     virtual Vector3 camera_center(Vector2 const& pix = Vector2() ) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->camera_center( pix ); }
 
     // Pose is a rotation which moves a vector in camera coordinates
     // into world coordinates.
     virtual Quat camera_pose(Vector2 const& pix = Vector2() ) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->camera_pose( pix ); }
 
+    // Interface-provided copy constructor.
     virtual boost::shared_ptr<CameraModel> copy() const override {
-      return boost::make_shared<IsisCameraModel>(m_cube_filename);
+      return boost::make_shared<IsisCameraModel>(*this);
     }
 
     // Returns the number of lines is the ISIS cube
-    int lines() const { return m_interface->lines(); }
+    int lines() const {
+      asp::CSpicePushSnapshot s(m_snapshot);
+      return m_interface->lines(); }
 
     // Returns the number of samples in the ISIS cube
-    int samples() const{ return m_interface->samples(); }
+    int samples() const{
+      asp::CSpicePushSnapshot s(m_snapshot);
+      return m_interface->samples(); }
 
     // Returns the serial number of the ISIS cube
     std::string serial_number() const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->serial_number(); }
 
     // Returns the ephemeris time for a pixel
     double ephemeris_time( Vector2 const& pix = Vector2() ) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->ephemeris_time( pix );
     }
 
     // Sun position in the target frame's inertial frame
     Vector3 sun_position( Vector2 const& pix = Vector2() ) const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->sun_position( pix );
     }
 
     // The three main radii that make up the spheroid. Z is out the polar region
     Vector3 target_radii() const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->target_radii();
     }
 
     // The spheroid name
     std::string target_name() const {
+      asp::CSpicePushSnapshot s(m_snapshot);
       return m_interface->target_name();
     }
 
@@ -112,6 +139,16 @@ namespace camera {
     }
     
   protected:
+    // Current CSPICE state.
+    asp::CSpiceSnapshot m_snapshot;
+
+    // State of CSPICE when the camera was loaded.
+    // CSPICE state is a fickle thing. We need to temporarily
+    // push this state onto the stack when copying the camera.
+    // This is shared between this camera and its descendents.
+    // !!! DO NOT MODIFY !!!
+    boost::shared_ptr<asp::CSpiceSnapshot> m_load_snapshot;
+
     boost::shared_ptr<asp::isis::IsisInterface> m_interface;
     std::string m_cube_filename;
     
