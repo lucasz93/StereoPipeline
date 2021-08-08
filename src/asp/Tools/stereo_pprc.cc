@@ -533,6 +533,8 @@ void stereo_preprocessing(bool adjust_left_image_size, ASPGlobalOptions& opt) {
 int main(int argc, char* argv[]) {
 
   try {
+    CSpiceContext cspice;
+
     xercesc::XMLPlatformUtils::Initialize();
   
     vw_out() << "\n[ " << current_posix_time_string() << " ] : Stage 0 --> PREPROCESSING \n";

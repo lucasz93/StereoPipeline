@@ -22,6 +22,8 @@
 #include <asp/Core/Common.h>
 #include <asp/Core/StereoSettings.h>
 
+#include "cspice/cspice_state.h"
+
 #include <map>
 #include <sstream>
 #include <string>
@@ -683,6 +685,37 @@ asp::BitChecker::BitChecker( vw::uint8 num_arguments )  : m_checksum(0) {
 bool asp::BitChecker::is_good() const {
   // Make sure all expected bits in m_checksum have been turned on.
   return (m_good == m_checksum);
+}
+
+
+asp::CSpiceContext::CSpiceContext() {
+  cspice_init();
+}
+
+asp::CSpiceContext::~CSpiceContext() {
+  cspice_shutdown();
+}
+
+
+asp::CSpiceSnapshot::CSpiceSnapshot() : m_snapshot(cspice_save(), &cspice_free) {}
+asp::CSpiceSnapshot::CSpiceSnapshot(const CSpiceSnapshot &src) : m_snapshot(cspice_copy(src.m_snapshot.get()), &cspice_free) {}
+
+
+asp::CSpicePushSnapshot::CSpicePushSnapshot(const CSpiceSnapshot& snapshot) {
+  cspice_push(snapshot.m_snapshot.get());
+}
+
+asp::CSpicePushSnapshot::~CSpicePushSnapshot() {
+  cspice_pop();
+}
+
+
+asp::CSpicePushSnapshotCopy::CSpicePushSnapshotCopy(const CSpiceSnapshot& snapshot) {
+  cspice_push_copy(snapshot.m_snapshot.get());
+}
+
+asp::CSpicePushSnapshotCopy::~CSpicePushSnapshotCopy() {
+  cspice_pop();
 }
 
 
