@@ -1123,6 +1123,9 @@ void do_software_rasterization_multi_spacing(const ImageViewRef<Vector3>& proj_p
 int main( int argc, char *argv[] ) {
   Options opt;
   try {
+    asp::CSpiceContext cspice;
+    asp::install_thread_setup();
+
     handle_arguments(argc, argv, opt);
 
     // Set up the georeferencing information.  We specify everything

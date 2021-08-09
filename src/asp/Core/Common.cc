@@ -19,6 +19,7 @@
 #include <vw/Core/System.h>
 #include <vw/Math/BBox.h>
 #include <vw/FileIO/DiskImageResource.h>
+#include <vw/Core/ThreadPool.h>
 #include <asp/Core/Common.h>
 #include <asp/Core/StereoSettings.h>
 
@@ -803,6 +804,26 @@ asp::CSpicePushSnapshotCopy::CSpicePushSnapshotCopy(const CSpiceSnapshot& snapsh
 
 asp::CSpicePushSnapshotCopy::~CSpicePushSnapshotCopy() {
   cspice_pop();
+}
+
+
+void asp::install_thread_setup() {
+  class CreateCSpiceTask : public vw::StateTask {
+  public:
+    void operator()() override {
+      cspice_init();
+    }
+  };
+
+  class DestroyCSpiceTask : public vw::StateTask {
+  public:
+    void operator()() override {
+      cspice_shutdown();
+    }
+  };
+
+  vw::WorkQueue::add_pre_task(boost::make_shared<CreateCSpiceTask>());
+  vw::WorkQueue::add_post_task(boost::make_shared<DestroyCSpiceTask>());
 }
 
 
