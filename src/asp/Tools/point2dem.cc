@@ -1261,6 +1261,9 @@ double estim_max_tri_error_and_proj_box(ImageViewRef<Vector3> const& proj_points
 int main( int argc, char *argv[] ) {
   Options opt;
   try {
+    asp::CSpiceContext cspice;
+    asp::install_thread_setup();
+
     handle_arguments(argc, argv, opt);
 
     // Set up the georeferencing information.  We specify everything

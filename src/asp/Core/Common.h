@@ -301,6 +301,10 @@ namespace asp {
     ~CSpicePushSnapshotCopy();
   };
 
+
+  /// Installs the functors for creating CSPICE contexts in the VW thread pool.
+  void install_thread_setup();
+
 } // end namespace asp
 
 // Custom Boost Program Options validators for VW/ASP types
