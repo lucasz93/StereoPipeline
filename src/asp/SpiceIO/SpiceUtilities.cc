@@ -23,6 +23,7 @@
 
 #include "SpiceUsr.h"
 #include "SpiceZfc.h"
+#include "cspice_state.h"
 
 #include <iostream>
 #include <fstream>
@@ -274,4 +275,34 @@ namespace spice {
     load_kernels(kernel_list);
   }
 
-}} // namespace asp::spice
+StateContext::StateContext() {
+  cspice_init();
+}
+
+StateContext::~StateContext() {
+  cspice_shutdown();
+}
+
+
+StateSnapshot::StateSnapshot() : m_snapshot(cspice_save(), &cspice_free) {}
+StateSnapshot::StateSnapshot(const StateSnapshot &src) : m_snapshot(cspice_copy(src.m_snapshot.get()), &cspice_free) {}
+
+
+PushStateSnapshot::PushStateSnapshot(const StateSnapshot& snapshot) {
+  cspice_push(snapshot.m_snapshot.get());
+}
+
+PushStateSnapshot::~PushStateSnapshot() {
+  cspice_pop();
+}
+
+
+PushStateSnapshotCopy::PushStateSnapshotCopy(const StateSnapshot& snapshot) {
+  cspice_push_copy(snapshot.m_snapshot.get());
+}
+
+PushStateSnapshotCopy::~PushStateSnapshotCopy() {
+  cspice_pop();
+}
+
+}} // namespace spice

@@ -51,6 +51,12 @@
 #include <asp/IsisIO/Equation.h>
 #include <asp/Sessions/StereoSessionIsis.h>
 
+// ISIS
+#include <isis/NaifStatus.h>
+
+// CSPICE
+#include <cspice/cspice_state.h>
+
 // Boost
 #include <boost/filesystem/operations.hpp>
 #include <boost/math/special_functions/next.hpp> // boost::float_next
@@ -320,6 +326,37 @@ find_ideal_isis_range(DiskImageView<float> const& image,
   }
 
   return masked_image;
+}
+
+/// Ensures this thread, and all child threads, have a valid CSPICE context.
+StereoSessionIsis::StereoSessionIsis() {
+  class CreateCSpiceTask : public vw::StateTask {
+  public:
+    void operator()() override {
+      cspice_init();
+      Isis::NaifStatus::Initialize();
+    }
+  };
+
+  class DestroyCSpiceTask : public vw::StateTask {
+  public:
+    void operator()() override {
+      cspice_shutdown();
+    }
+  };
+
+  // Create a local CSPICE context
+  cspice_init();
+  Isis::NaifStatus::Initialize();
+
+  // Ensure worker threads have valid CSPICE contexts.
+  vw::WorkQueue::add_pre_task(boost::make_shared<CreateCSpiceTask>());
+  vw::WorkQueue::add_post_task(boost::make_shared<DestroyCSpiceTask>());
+}
+
+/// Releases memory.
+StereoSessionIsis::~StereoSessionIsis() {
+  cspice_shutdown();
 }
   
 void StereoSessionIsis::pre_preprocessing_hook(bool adjust_left_image_size,

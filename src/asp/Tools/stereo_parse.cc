@@ -92,9 +92,6 @@ void find_tile_at_loc(std::string const& tile_at_loc, ASPGlobalOptions const& op
 int main(int argc, char* argv[]) {
 
   try {
-    CSpiceContext cspice;
-    asp::install_thread_setup();
-
     xercesc::XMLPlatformUtils::Initialize();
     stereo_register_sessions();
 

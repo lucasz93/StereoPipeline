@@ -270,53 +270,6 @@ namespace asp {
     bool is_good() const; ///< Return true if all arguments have been checked.
   }; // End class BitChecker
 
-
-  /// Manages the main lifecycle of f2c'd state.
-  class CSpiceContext {
-  public:
-    CSpiceContext();
-    ~CSpiceContext();
-  };
-
-
-  /// Takes a copy of the current CSpice state.
-  /// Can pass this to threads for them to load copies of the state.
-  class CSpiceSnapshot {
-    friend class CSpicePushSnapshot;
-    friend class CSpicePushSnapshotCopy;
-
-    boost::shared_ptr<void> m_snapshot;
-
-  public:
-    CSpiceSnapshot();
-    CSpiceSnapshot(const CSpiceSnapshot &src);
-  };
-
-
-  /// Pushes a copy of the input state onto the CSPICE state stack.
-  /// Pops when out of scope.
-  /// This class is not thread safe. Ensure only 1 thread has set
-  /// the input state as activate.
-  class CSpicePushSnapshot {
-  public:
-    CSpicePushSnapshot(const CSpiceSnapshot& snapshot);
-    ~CSpicePushSnapshot();
-  };
-
-
-  /// Sets the given snapshot as current.
-  /// Pops when out of scope.
-  /// Duplicating snapshots are thread safe.
-  class CSpicePushSnapshotCopy {
-  public:
-    CSpicePushSnapshotCopy(const CSpiceSnapshot& snapshot);
-    ~CSpicePushSnapshotCopy();
-  };
-
-
-  /// Installs the functors for creating CSPICE contexts in the VW thread pool.
-  void install_thread_setup();
-
 } // end namespace asp
 
 // Custom Boost Program Options validators for VW/ASP types

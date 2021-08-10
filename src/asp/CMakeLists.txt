@@ -335,7 +335,7 @@ endforeach()
 get_all_source_files( "Core"       ASP_CORE_SRC_FILES)
 get_all_source_files( "Core/tests" ASP_CORE_TEST_FILES)
 set(ASP_CORE_LIB_DEPENDENCIES ${VW_3RD_PARTY_LIBS} ${VISIONWORKBENCH_LIBRARIES}
-    ${LIBLAS_LIBRARIES} ${LASZIP_LIBRARIES} ${OpenMP_CXX_LIBRARIES} ${CMAKE_DL_LIBS} ${SPICE_LIBRARIES})
+    ${LIBLAS_LIBRARIES} ${LASZIP_LIBRARIES} ${OpenMP_CXX_LIBRARIES} ${CMAKE_DL_LIBS})
 
 # --- ASP_SPICEIO ------------------------------------------------------------
 get_all_source_files( "SpiceIO"       ASP_SPICEIO_SRC_FILES)

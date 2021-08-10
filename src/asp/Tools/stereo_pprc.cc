@@ -588,9 +588,6 @@ void estimate_convergence_angle(ASPGlobalOptions const& opt) {
 int main(int argc, char* argv[]) {
 
   try {
-    CSpiceContext cspice;
-    asp::install_thread_setup();
-
     xercesc::XMLPlatformUtils::Initialize();
   
     vw_out() << "\n[ " << current_posix_time_string() << " ] : Stage 0 --> PREPROCESSING \n";
