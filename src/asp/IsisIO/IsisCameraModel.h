@@ -45,13 +45,13 @@ namespace camera {
     //------------------------------------------------------------------
     IsisCameraModel(std::string cube_filename) :
       m_load_snapshot(new asp::CSpiceSnapshot()),
-      m_snapshot(),
       m_interface(asp::isis::IsisInterface::open( cube_filename )),
+      m_working_snapshot(), // Take the snapshot after loading.
       m_cube_filename(cube_filename) {}
 
     IsisCameraModel(const IsisCameraModel &src) :
       m_load_snapshot(src.m_load_snapshot),
-      m_snapshot(src.m_snapshot),
+      m_working_snapshot(src.m_working_snapshot),
       m_cube_filename(src.m_cube_filename)
     {
       asp::CSpicePushSnapshotCopy x(*m_load_snapshot);
@@ -68,25 +68,25 @@ namespace camera {
     //  image plane.  Returns a pixel location (col, row) where the
     //  point appears in the image.
     virtual Vector2 point_to_pixel(Vector3 const& point) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->point_to_pixel( point ); }
 
     // Returns a (normalized) pointing vector from the camera center
     //  through the position of the pixel 'pix' on the image plane.
     virtual Vector3 pixel_to_vector (Vector2 const& pix) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->pixel_to_vector( pix ); }
 
 
     // Returns the position of the focal point of the camera
     virtual Vector3 camera_center(Vector2 const& pix = Vector2() ) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->camera_center( pix ); }
 
     // Pose is a rotation which moves a vector in camera coordinates
     // into world coordinates.
     virtual Quat camera_pose(Vector2 const& pix = Vector2() ) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->camera_pose( pix ); }
 
     // Interface-provided copy constructor.
@@ -96,40 +96,40 @@ namespace camera {
 
     // Returns the number of lines is the ISIS cube
     int lines() const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->lines(); }
 
     // Returns the number of samples in the ISIS cube
     int samples() const{
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->samples(); }
 
     // Returns the serial number of the ISIS cube
     std::string serial_number() const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->serial_number(); }
 
     // Returns the ephemeris time for a pixel
     double ephemeris_time( Vector2 const& pix = Vector2() ) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->ephemeris_time( pix );
     }
 
     // Sun position in the target frame's inertial frame
     Vector3 sun_position( Vector2 const& pix = Vector2() ) const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->sun_position( pix );
     }
 
     // The three main radii that make up the spheroid. Z is out the polar region
     Vector3 target_radii() const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->target_radii();
     }
 
     // The spheroid name
     std::string target_name() const {
-      asp::CSpicePushSnapshot s(m_snapshot);
+      asp::CSpicePushSnapshot s(m_working_snapshot);
       return m_interface->target_name();
     }
 
@@ -140,7 +140,7 @@ namespace camera {
     
   protected:
     // Current CSPICE state.
-    asp::CSpiceSnapshot m_snapshot;
+    asp::CSpiceSnapshot m_working_snapshot;
 
     // State of CSPICE when the camera was loaded.
     // CSPICE state is a fickle thing. We need to temporarily
