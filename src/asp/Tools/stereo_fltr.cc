@@ -448,9 +448,6 @@ void stereo_filtering( ASPGlobalOptions& opt ) {
 int main(int argc, char* argv[]) {
 
   try {
-    CSpiceContext cspice;
-    asp::install_thread_setup();
-    
     xercesc::XMLPlatformUtils::Initialize();
 
     vw_out() << "\n[ " << current_posix_time_string()

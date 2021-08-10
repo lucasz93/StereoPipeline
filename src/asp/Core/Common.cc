@@ -689,57 +689,6 @@ bool asp::BitChecker::is_good() const {
 }
 
 
-asp::CSpiceContext::CSpiceContext() {
-  cspice_init();
-}
-
-asp::CSpiceContext::~CSpiceContext() {
-  cspice_shutdown();
-}
-
-
-asp::CSpiceSnapshot::CSpiceSnapshot() : m_snapshot(cspice_save(), &cspice_free) {}
-asp::CSpiceSnapshot::CSpiceSnapshot(const CSpiceSnapshot &src) : m_snapshot(cspice_copy(src.m_snapshot.get()), &cspice_free) {}
-
-
-asp::CSpicePushSnapshot::CSpicePushSnapshot(const CSpiceSnapshot& snapshot) {
-  cspice_push(snapshot.m_snapshot.get());
-}
-
-asp::CSpicePushSnapshot::~CSpicePushSnapshot() {
-  cspice_pop();
-}
-
-
-asp::CSpicePushSnapshotCopy::CSpicePushSnapshotCopy(const CSpiceSnapshot& snapshot) {
-  cspice_push_copy(snapshot.m_snapshot.get());
-}
-
-asp::CSpicePushSnapshotCopy::~CSpicePushSnapshotCopy() {
-  cspice_pop();
-}
-
-
-void asp::install_thread_setup() {
-  class CreateCSpiceTask : public vw::StateTask {
-  public:
-    void operator()() override {
-      cspice_init();
-    }
-  };
-
-  class DestroyCSpiceTask : public vw::StateTask {
-  public:
-    void operator()() override {
-      cspice_shutdown();
-    }
-  };
-
-  vw::WorkQueue::add_pre_task(boost::make_shared<CreateCSpiceTask>());
-  vw::WorkQueue::add_post_task(boost::make_shared<DestroyCSpiceTask>());
-}
-
-
 namespace boost {
 namespace program_options {
 

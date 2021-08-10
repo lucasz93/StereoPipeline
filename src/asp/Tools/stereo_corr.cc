@@ -1240,9 +1240,6 @@ void stereo_correlation( ASPGlobalOptions& opt ) {
 int main(int argc, char* argv[]) {
 
   try {
-    CSpiceContext cspice;
-    asp::install_thread_setup();
-    
     xercesc::XMLPlatformUtils::Initialize();
 
     stereo_register_sessions();
