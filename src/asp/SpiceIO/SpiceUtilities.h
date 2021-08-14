@@ -96,6 +96,8 @@ namespace spice {
   /// This class is not thread safe. Ensure only 1 thread has set
   /// the input state as activate.
   class PushStateSnapshot {
+    boost::shared_ptr<void> m_snapshot;
+    
   public:
     PushStateSnapshot(const StateSnapshot& snapshot);
     ~PushStateSnapshot();
@@ -106,6 +108,8 @@ namespace spice {
   /// Pops when out of scope.
   /// Duplicating snapshots are thread safe.
   class PushStateSnapshotCopy {
+    boost::shared_ptr<void> m_snapshot;
+    
   public:
     PushStateSnapshotCopy(const StateSnapshot& snapshot);
     ~PushStateSnapshotCopy();
