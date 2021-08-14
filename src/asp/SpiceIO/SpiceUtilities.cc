@@ -288,8 +288,8 @@ StateSnapshot::StateSnapshot() : m_snapshot(cspice_save(), &cspice_free) {}
 StateSnapshot::StateSnapshot(const StateSnapshot &src) : m_snapshot(cspice_copy(src.m_snapshot.get()), &cspice_free) {}
 
 
-PushStateSnapshot::PushStateSnapshot(const StateSnapshot& snapshot) {
-  cspice_push(snapshot.m_snapshot.get());
+PushStateSnapshot::PushStateSnapshot(const StateSnapshot& snapshot) : m_snapshot(snapshot.m_snapshot) {
+  cspice_push(m_snapshot.get());
 }
 
 PushStateSnapshot::~PushStateSnapshot() {
@@ -297,8 +297,8 @@ PushStateSnapshot::~PushStateSnapshot() {
 }
 
 
-PushStateSnapshotCopy::PushStateSnapshotCopy(const StateSnapshot& snapshot) {
-  cspice_push_copy(snapshot.m_snapshot.get());
+PushStateSnapshotCopy::PushStateSnapshotCopy(const StateSnapshot& snapshot) : m_snapshot(cspice_copy(snapshot.m_snapshot.get()), &cspice_free) {
+  cspice_push(m_snapshot.get());
 }
 
 PushStateSnapshotCopy::~PushStateSnapshotCopy() {
