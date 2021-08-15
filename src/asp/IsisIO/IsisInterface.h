@@ -36,6 +36,7 @@
 #include <Cube.h>
 
 #include <string>
+#include <asp/SpiceIO/SpiceUtilities.h>
 
 namespace Isis {
   class Pvl;
@@ -51,10 +52,12 @@ namespace isis {
   class IsisInterface {
   public:
     IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
+
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
     virtual std::string type() = 0;
+    asp::spice::StateSnapshot &snapshot() { return m_working_snapshot; }
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
     static IsisInterface* open( std::string const& filename );
@@ -91,6 +94,9 @@ namespace isis {
 
     vw::cartography::Datum m_datum;
     
+    // Current CSPICE state.
+    asp::spice::StateSnapshot m_working_snapshot;
+
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
 
