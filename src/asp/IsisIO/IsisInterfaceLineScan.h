@@ -43,7 +43,7 @@ namespace isis {
   class IsisInterfaceLineScan : public IsisInterface {
 
   public:
-    IsisInterfaceLineScan( std::string const& file );
+    IsisInterfaceLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
 
     virtual ~IsisInterfaceLineScan() {}
 

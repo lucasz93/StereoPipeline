@@ -42,7 +42,7 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( std::string const& file );
+    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
@@ -76,9 +76,9 @@ namespace isis {
   protected:
     // Standard Variables
     //------------------------------------------------------
-    boost::scoped_ptr<Isis::Pvl   > m_label;
-    boost::scoped_ptr<Isis::Camera> m_camera;
-    boost::scoped_ptr<Isis::Cube  > m_cube;
+    boost::shared_ptr<Isis::Pvl   > m_label;
+    boost::shared_ptr<Isis::Camera> m_camera;
+    boost::shared_ptr<Isis::Cube  > m_cube;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
