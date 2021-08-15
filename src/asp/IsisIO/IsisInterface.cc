@@ -39,8 +39,6 @@
 #include <SerialNumber.h>
 #include <iTime.h>
 
-#include <vw/Core/Debugging.h>
-
 using namespace vw;
 using namespace asp;
 using namespace asp::isis;
@@ -53,7 +51,6 @@ public:
   InterfaceDeregisterListener(const vw::camera::IsisCameraModel *cam) : m_camera(cam) {}
 
   void finish(uint64_t id) override {
-    vw::Timer t("RELEASING!");
     m_camera->release_interface(id);
   }
 };
@@ -109,13 +106,6 @@ void vw::camera::IsisCameraModel::release_interface(uint64_t id) const {
   m_lru_interfaces.push(it->second);
 
   m_active_interfaces.erase(it);
-}
-
-IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
-  : m_label(label)
-  , m_cube(cube)
-  , m_camera(camera)
-{
 }
 
 IsisInterface::~IsisInterface() {}

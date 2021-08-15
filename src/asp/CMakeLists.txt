@@ -343,7 +343,7 @@ set(ASP_SPICEIO_LIB_DEPENDENCIES AspCore ${SPICE_LIBRARIES})
 # --- ASP_ISISIO ------------------------------------------------------------
 get_all_source_files( "IsisIO"       ASP_ISISIO_SRC_FILES)
 get_all_source_files( "IsisIO/tests" ASP_ISISIO_TEST_FILES)
-set(ASP_ISISIO_LIB_DEPENDENCIES  AspCore ${ISIS_3RD_PARTY_LIBS} ${ISIS_LIBRARIES}
+set(ASP_ISISIO_LIB_DEPENDENCIES  AspCore AspSpiceIO ${ISIS_3RD_PARTY_LIBS} ${ISIS_LIBRARIES}
                                  ${VW_3RD_PARTY_LIBS} ${VISIONWORKBENCH_LIBRARIES})
 
 # --- ASP_CAMERA ------------------------------------------------------------

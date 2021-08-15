@@ -28,6 +28,7 @@
 #include <Cube.h>
 #include <vw/Math/Vector.h>
 #include <vw/Math/Quaternion.h>
+#include <asp/SpiceIO/SpiceUtilities.h>
 
 namespace Isis {
   class Pvl;
@@ -42,11 +43,18 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
+    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
+      : m_label(label)
+      , m_cube(cube)
+      , m_camera(camera)
+    {
+    }
+
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
     virtual std::string type() = 0;
+    asp::spice::StateSnapshot &snapshot() { return m_working_snapshot; }
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
     static IsisInterface* open( std::string const& filename );
@@ -79,6 +87,9 @@ namespace isis {
     boost::shared_ptr<Isis::Pvl   > m_label;
     boost::shared_ptr<Isis::Camera> m_camera;
     boost::shared_ptr<Isis::Cube  > m_cube;
+
+    // Current CSPICE state.
+    asp::spice::StateSnapshot m_working_snapshot;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
