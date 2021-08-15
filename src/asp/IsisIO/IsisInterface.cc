@@ -24,6 +24,7 @@
 #include <asp/IsisIO/IsisInterfaceMapLineScan.h>
 #include <asp/IsisIO/IsisInterfaceLineScan.h>
 #include <asp/IsisIO/IsisInterfaceSAR.h>
+#include <asp/IsisIO/IsisCameraModel.h>
 #include <boost/filesystem.hpp>
 
 #include <iomanip>
@@ -39,9 +40,77 @@
 #include <SerialNumber.h>
 #include <iTime.h>
 
+#include <vw/Core/Debugging.h>
+
 using namespace vw;
 using namespace asp;
 using namespace asp::isis;
+
+class InterfaceDeregisterListener : public vw::ThreadEventListener {
+private:
+  const vw::camera::IsisCameraModel* m_camera;
+
+public:
+  InterfaceDeregisterListener(const vw::camera::IsisCameraModel *cam) : m_camera(cam) {}
+
+  void finish(uint64_t id) override {
+    vw::Timer t("RELEASING!");
+    m_camera->release_interface(id);
+  }
+};
+
+boost::shared_ptr<asp::isis::IsisInterface> vw::camera::IsisCameraModel::get_interface() const {
+  const auto thread_id = vw::Thread::id();
+
+  // Check if this thread has an active interface.
+  {
+    vw::Mutex::ReadLock lock(m_lock);
+    auto it = m_active_interfaces.find(thread_id);
+    if (it != m_active_interfaces.end())
+      return it->second;
+  }
+
+  // Main thread doesn't have a self pointer.
+  // Guess we'll just let its interface live forever.
+  if (vw::Thread::self())
+    vw::Thread::self()->add_listener(boost::make_shared<InterfaceDeregisterListener>(this));
+
+  // No active interfaces - look in the LRU.
+  {
+    vw::Mutex::WriteLock lock(m_lock);
+
+    if (m_lru_interfaces.size())
+    {
+      auto result = m_active_interfaces.insert(std::make_pair(thread_id, m_lru_interfaces.front()));
+      m_lru_interfaces.pop();
+
+      return result.first->second;
+    }
+  }
+
+  // No space interfaces - create one.
+  {
+    // Load the interface outside the write lock. Allows other threads to continue using this method with blocking.
+    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename));
+
+    vw::Mutex::WriteLock lock(m_lock);
+
+    auto result = m_active_interfaces.insert(std::make_pair(thread_id, interface));
+    return result.first->second;
+  }
+}
+
+void vw::camera::IsisCameraModel::release_interface(uint64_t id) const {
+  vw::Mutex::WriteLock lock(m_lock);
+
+  auto it = m_active_interfaces.find(id);
+  if (it == m_active_interfaces.end())
+    throw std::runtime_error("Releasing an interface not in the active list?!");
+
+  m_lru_interfaces.push(it->second);
+
+  m_active_interfaces.erase(it);
+}
 
 IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
   : m_label(label)

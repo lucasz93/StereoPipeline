@@ -330,17 +330,14 @@ find_ideal_isis_range(DiskImageView<float> const& image,
 
 /// Ensures this thread, and all child threads, have a valid CSPICE context.
 StereoSessionIsis::StereoSessionIsis() {
-  class CreateCSpiceTask : public vw::StateTask {
+  class CreateCSpiceTask : public vw::TaskEventListener {
   public:
-    void operator()() override {
+    void pre_task(uint64_t id) override {
       cspice_init();
       Isis::NaifStatus::Initialize();
     }
-  };
 
-  class DestroyCSpiceTask : public vw::StateTask {
-  public:
-    void operator()() override {
+    void post_task(uint64_t id) override {
       cspice_shutdown();
     }
   };
@@ -350,8 +347,7 @@ StereoSessionIsis::StereoSessionIsis() {
   Isis::NaifStatus::Initialize();
 
   // Ensure worker threads have valid CSPICE contexts.
-  vw::WorkQueue::add_pre_task(boost::make_shared<CreateCSpiceTask>());
-  vw::WorkQueue::add_post_task(boost::make_shared<DestroyCSpiceTask>());
+  vw::WorkQueue::add_listener(boost::make_shared<CreateCSpiceTask>());
 }
 
 /// Releases memory.
