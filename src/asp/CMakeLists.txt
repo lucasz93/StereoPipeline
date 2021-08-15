@@ -42,6 +42,13 @@ endif()
     
 find_package(Threads REQUIRED)
 
+# MECHSOFT: I install a bunch of override things in this directory.
+# We want to find them before their friends in asp_deps. So look for them first.
+if (CMAKE_INSTALL_PREFIX)
+  include_directories(${CMAKE_INSTALL_PREFIX}/include)
+  link_directories(${CMAKE_INSTALL_PREFIX}/lib)
+endif()
+
 # Put the search for Boost early on, to ensure that the Conda version
 # is found before we point to the BB folder.
 # TODO: Make into a function!
