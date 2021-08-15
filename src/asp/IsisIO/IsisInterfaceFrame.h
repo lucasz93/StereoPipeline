@@ -43,7 +43,7 @@ namespace isis {
   class IsisInterfaceFrame : public IsisInterface {
 
   public:
-    IsisInterfaceFrame( std::string const& filename );
+    IsisInterfaceFrame( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
 
     virtual std::string type()  { return "Frame"; }
 

@@ -43,16 +43,11 @@ using namespace vw;
 using namespace asp;
 using namespace asp::isis;
 
-IsisInterface::IsisInterface(std::string const& file) {
-  // Opening labels and camera
-  Isis::FileName ifilename(QString::fromStdString(file));
-  m_label.reset(new Isis::Pvl());
-  m_label->read(ifilename.expanded());
-
-  // Opening Isis::Camera
-  m_cube.reset(new Isis::Cube(QString::fromStdString(file)));
-  m_camera.reset(Isis::CameraFactory::Create(*m_cube));
-
+IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
+  : m_label(label)
+  , m_cube(cube)
+  , m_camera(camera)
+{
   // Set the datum
   // TODO(oalexan1): This is fragile. Need to find the right internal ISIS
   // function to use to convert ECEF to lon-lat-height and vice-versa.
@@ -64,12 +59,11 @@ IsisInterface::~IsisInterface() {}
 
 IsisInterface* IsisInterface::open(std::string const& filename) {
   // Opening Labels (This should be done somehow though labels)
-  Isis::FileName ifilename(QString::fromStdString(filename));
-  Isis::Pvl label;
-  label.read(ifilename.expanded());
+  Isis::FileName ifilename( QString::fromStdString(filename) );
+  boost::shared_ptr<Isis::Pvl> label(new Isis::Pvl(ifilename.expanded()));
 
-  Isis::Cube tempCube(QString::fromStdString(filename));
-  Isis::Camera* camera = Isis::CameraFactory::Create(tempCube);
+  boost::shared_ptr<Isis::Cube> tempCube(new Isis::Cube(QString::fromStdString(filename)));
+  boost::shared_ptr<Isis::Camera> camera(Isis::CameraFactory::Create( *tempCube ));
 
   IsisInterface* result;
 
@@ -78,16 +72,16 @@ IsisInterface* IsisInterface::open(std::string const& filename) {
   case 0:
     // Framing camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapFrame(filename);
+      result = new IsisInterfaceMapFrame(label, tempCube, camera);
     else
-      result = new IsisInterfaceFrame(filename);
+      result = new IsisInterfaceFrame(label, tempCube, camera);
     break;
   case 2:
     // Linescan camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapLineScan(filename);
+      result = new IsisInterfaceMapLineScan(label, tempCube, camera);
     else
-      result = new IsisInterfaceLineScan(filename);
+      result = new IsisInterfaceLineScan(label, tempCube, camera);
     break;
   case 3:
     // SAR camera (such as MiniRF)
