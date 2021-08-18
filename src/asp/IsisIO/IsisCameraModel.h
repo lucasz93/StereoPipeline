@@ -161,19 +161,19 @@ namespace camera {
   protected:
     std::string m_cube_filename;
 
-    mutable vw::Mutex m_lock;
+    mutable vw::FastSharedMutex m_lock;
 
     // Interfaces allocated to a thread.
-    mutable std::map<uint64_t, boost::shared_ptr<asp::isis::IsisInterface>> m_active_interfaces;
+    mutable std::unordered_map<uint64_t, boost::shared_ptr<asp::isis::IsisInterface>> m_active_interfaces;
 
     // Interfaces that have been deallocated.
     // Ripe for re-allocation.
-    mutable std::queue<boost::shared_ptr<asp::isis::IsisInterface>> m_lru_interfaces;
+    mutable std::vector<boost::shared_ptr<asp::isis::IsisInterface>> m_lru_interfaces;
     
     friend std::ostream& operator<<( std::ostream&, IsisCameraModel const& );
 
   private:
-    boost::shared_ptr<asp::isis::IsisInterface> get_interface() const;
+    asp::isis::IsisInterface* get_interface() const;
   };
 
   // IOstream interface
