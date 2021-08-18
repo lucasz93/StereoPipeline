@@ -55,15 +55,16 @@ public:
   }
 };
 
-boost::shared_ptr<asp::isis::IsisInterface> vw::camera::IsisCameraModel::get_interface() const {
+asp::isis::IsisInterface* vw::camera::IsisCameraModel::get_interface() const {
   const auto thread_id = vw::Thread::id();
 
   // Check if this thread has an active interface.
   {
-    vw::Mutex::ReadLock lock(m_lock);
+    vw::FastSharedMutex::ReadLock lock(m_lock);
     auto it = m_active_interfaces.find(thread_id);
-    if (it != m_active_interfaces.end())
-      return it->second;
+    if (it != m_active_interfaces.end()) {
+      return it->second.get();
+    }
   }
 
   // Main thread doesn't have a self pointer.
@@ -73,14 +74,14 @@ boost::shared_ptr<asp::isis::IsisInterface> vw::camera::IsisCameraModel::get_int
 
   // No active interfaces - look in the LRU.
   {
-    vw::Mutex::WriteLock lock(m_lock);
+    vw::FastSharedMutex::WriteLock lock(m_lock);
 
     if (m_lru_interfaces.size())
     {
       auto result = m_active_interfaces.insert(std::make_pair(thread_id, m_lru_interfaces.front()));
-      m_lru_interfaces.pop();
+      m_lru_interfaces.pop_back();
 
-      return result.first->second;
+      return result.first->second.get();
     }
   }
 
@@ -89,21 +90,21 @@ boost::shared_ptr<asp::isis::IsisInterface> vw::camera::IsisCameraModel::get_int
     // Load the interface outside the write lock. Allows other threads to continue using this method with blocking.
     auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename));
 
-    vw::Mutex::WriteLock lock(m_lock);
+    vw::FastSharedMutex::WriteLock lock(m_lock);
 
     auto result = m_active_interfaces.insert(std::make_pair(thread_id, interface));
-    return result.first->second;
+    return result.first->second.get();
   }
 }
 
 void vw::camera::IsisCameraModel::release_interface(uint64_t id) const {
-  vw::Mutex::WriteLock lock(m_lock);
+  vw::FastSharedMutex::WriteLock lock(m_lock);
 
   auto it = m_active_interfaces.find(id);
   if (it == m_active_interfaces.end())
     throw std::runtime_error("Releasing an interface not in the active list?!");
 
-  m_lru_interfaces.push(it->second);
+  m_lru_interfaces.push_back(it->second);
 
   m_active_interfaces.erase(it);
 }
