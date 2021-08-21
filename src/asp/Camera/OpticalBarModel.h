@@ -135,10 +135,6 @@ namespace camera {
     /// Gives a pose vector which represents the rotation from camera to world units
     virtual vw::Quat camera_pose(vw::Vector2 const& pix) const;
 
-    virtual boost::shared_ptr<CameraModel> copy() const override {
-      return boost::make_shared<OpticalBarModel>(*this);
-    }
-
     // -- These are new functions --
 
     // These return the initial center/pose at time=0.

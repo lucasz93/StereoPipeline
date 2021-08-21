@@ -89,10 +89,6 @@ namespace asp {
       return m_time_func(line);
     }
 
-    virtual boost::shared_ptr<CameraModel> copy() const override{
-      return boost::make_shared<LinescanDGModel>(*this);
-    }
-    
     /// As pixel_to_vector, but in the local camera frame.
     virtual vw::Vector3 get_local_pixel_vector(vw::Vector2 const& pix) const {
       vw::Vector3 local_vec(pix[0]+m_detector_origin[0], m_detector_origin[1], m_focal_length);

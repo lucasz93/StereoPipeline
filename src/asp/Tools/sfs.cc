@@ -809,12 +809,6 @@ namespace vw { namespace camera {
       return this->exact_unadjusted_camera()->camera_pose(pix);
     }
 
-    virtual boost::shared_ptr<CameraModel> copy() const override {
-      auto dupe = boost::make_shared<ApproxCameraModel>(*this);
-      dupe->m_rpc_model = boost::dynamic_pointer_cast<asp::RPCModel>(m_rpc_model->copy());
-      return dupe;
-    }
-
   };
 
   // TODO(oalexan1): Must use the adjusted model in the camera center
@@ -1101,10 +1095,6 @@ namespace vw { namespace camera {
       }
       // TODO(oalexan1): Put here the exact adjusted camera!
       return this->exact_unadjusted_camera()->camera_pose(pix);
-    }
-
-    virtual boost::shared_ptr<CameraModel> copy() const override {
-      return boost::make_shared<ApproxAdjustedCameraModel>(*this);
     }
 
   };
