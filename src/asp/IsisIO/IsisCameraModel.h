@@ -47,13 +47,6 @@ namespace camera {
     IsisCameraModel(std::string cube_filename) :
       m_cube_filename(cube_filename) {}
 
-    IsisCameraModel(const IsisCameraModel &src) :
-      m_cube_filename(src.m_cube_filename)
-    {
-      //asp::spice::PushStateSnapshotCopy x(*m_load_snapshot);
-      //asp::spice::PushStateSnapshot s(interface->snapshot());
-    }
-    
     virtual std::string type() const { return "Isis"; }
 
     //------------------------------------------------------------------
@@ -92,11 +85,6 @@ namespace camera {
 
       asp::spice::PushStateSnapshot s(interface->snapshot());
       return interface->camera_pose( pix ); }
-
-    // Interface-provided copy constructor.
-    virtual boost::shared_ptr<CameraModel> copy() const override {
-      return boost::make_shared<IsisCameraModel>(*this);
-    }
 
     // Returns the number of lines is the ISIS cube
     int lines() const {
