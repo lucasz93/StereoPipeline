@@ -122,7 +122,7 @@ namespace asp {
     math::FLANNTree<unsigned char>& m_tree_uchar;
     IPListIter                      m_start, m_end;
     ip::InterestPointList const&    m_ip_other;
-    boost::shared_ptr<camera::CameraModel> m_cam1, m_cam2;
+    camera::CameraModel            *m_cam1, *m_cam2;
     EpipolarLinePointMatcher const& m_matcher;
     Mutex&                          m_camera_mutex;
     std::vector<size_t>::iterator   m_output;
@@ -134,8 +134,8 @@ namespace asp {
                            ip::InterestPointList::const_iterator start,
                            ip::InterestPointList::const_iterator end,
                            ip::InterestPointList const& ip2,
-                           boost::shared_ptr<camera::CameraModel> cam1,
-                           boost::shared_ptr<camera::CameraModel> cam2,
+                           camera::CameraModel* cam1,
+                           camera::CameraModel* cam2,
                            EpipolarLinePointMatcher const& matcher,
                            Mutex& camera_mutex,
                            std::vector<size_t>::iterator output ) :
@@ -160,9 +160,9 @@ namespace asp {
         if (m_single_threaded_camera){
           // ISIS camera is single-threaded
           Mutex::Lock lock( m_camera_mutex );
-          line_eq = m_matcher.epipolar_line( ip_org_coord, m_matcher.m_datum, m_cam1.get(), m_cam2.get(), found_epipolar);
+          line_eq = m_matcher.epipolar_line( ip_org_coord, m_matcher.m_datum, m_cam1, m_cam2, found_epipolar);
         }else{
-          line_eq = m_matcher.epipolar_line( ip_org_coord, m_matcher.m_datum, m_cam1.get(), m_cam2.get(), found_epipolar);
+          line_eq = m_matcher.epipolar_line( ip_org_coord, m_matcher.m_datum, m_cam1, m_cam2, found_epipolar);
         }
 
         if (!found_epipolar) {
@@ -304,7 +304,7 @@ namespace asp {
         match_task( new EpipolarLineMatchTask( m_single_threaded_camera,
                     use_uchar_FLANN, kd_float, kd_uchar,
                     start_it, end_it,
-                    ip2, cam1->copy(), cam2->copy(), *this,
+                    ip2, cam1, cam2, *this,
                     camera_mutex, output_it ) );
       matching_queue.add_task( match_task );
       start_it = end_it;
@@ -314,7 +314,7 @@ namespace asp {
       match_task( new EpipolarLineMatchTask( m_single_threaded_camera,
                   use_uchar_FLANN, kd_float, kd_uchar,
                   start_it, ip1.end(),
-                  ip2, cam1->copy(), cam2->copy(), *this,
+                  ip2, cam1, cam2, *this,
                   camera_mutex, output_it ) );
     matching_queue.add_task( match_task );
     matching_queue.join_all(); // Wait for all the jobs to finish.
