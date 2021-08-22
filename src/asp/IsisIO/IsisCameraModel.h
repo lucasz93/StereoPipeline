@@ -33,6 +33,9 @@
 #include <asp/Core/Common.h>
 #include <asp/IsisIO/IsisInterface.h>
 
+// ISIS
+#include <isis/NaifContext.h>
+
 namespace vw {
 namespace camera {
 
@@ -59,7 +62,7 @@ namespace camera {
     virtual Vector2 point_to_pixel(Vector3 const& point) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->point_to_pixel( point ); }
 
     // Returns a (normalized) pointing vector from the camera center
@@ -67,7 +70,7 @@ namespace camera {
     virtual Vector3 pixel_to_vector (Vector2 const& pix) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->pixel_to_vector( pix ); }
 
 
@@ -75,7 +78,7 @@ namespace camera {
     virtual Vector3 camera_center(Vector2 const& pix = Vector2() ) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->camera_center( pix ); }
 
     // Pose is a rotation which moves a vector in camera coordinates
@@ -83,35 +86,35 @@ namespace camera {
     virtual Quat camera_pose(Vector2 const& pix = Vector2() ) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->camera_pose( pix ); }
 
     // Returns the number of lines is the ISIS cube
     int lines() const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->lines(); }
 
     // Returns the number of samples in the ISIS cube
     int samples() const{
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->samples(); }
 
     // Returns the serial number of the ISIS cube
     std::string serial_number() const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->serial_number(); }
 
     // Returns the ephemeris time for a pixel
     double ephemeris_time( Vector2 const& pix = Vector2() ) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->ephemeris_time( pix );
     }
 
@@ -119,7 +122,7 @@ namespace camera {
     Vector3 sun_position( Vector2 const& pix = Vector2() ) const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->sun_position( pix );
     }
 
@@ -127,7 +130,7 @@ namespace camera {
     Vector3 target_radii() const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->target_radii();
     }
 
@@ -135,7 +138,7 @@ namespace camera {
     std::string target_name() const {
       auto interface = get_interface();
 
-      asp::spice::PushStateSnapshot s(interface->snapshot());
+      Isis::PushNaifSnapshot s(interface->snapshot());
       return interface->target_name();
     }
 
@@ -148,6 +151,8 @@ namespace camera {
 
   protected:
     std::string m_cube_filename;
+
+    Isis::NaifSnapshot m_snapshot;
 
     mutable vw::FastSharedMutex m_lock;
 

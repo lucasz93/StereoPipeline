@@ -38,6 +38,8 @@
 #include <string>
 #include <asp/SpiceIO/SpiceUtilities.h>
 
+// ISIS
+#include <isis/NaifContext.h>
 namespace Isis {
   class Pvl;
   class Camera;
@@ -51,16 +53,16 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
+    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot );
 
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
     virtual std::string type() = 0;
-    asp::spice::StateSnapshot &snapshot() { return m_working_snapshot; }
+    boost::shared_ptr<Isis::NaifSnapshot> snapshot() { return m_working_snapshot; }
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
-    static IsisInterface* open( std::string const& filename );
+    static IsisInterface* open( std::string const& filename, const Isis::NaifSnapshot& snapshot );
 
     // Standard Methods
     //------------------------------------------------------
@@ -95,7 +97,7 @@ namespace isis {
     vw::cartography::Datum m_datum;
     
     // Current CSPICE state.
-    asp::spice::StateSnapshot m_working_snapshot;
+    boost::shared_ptr<Isis::NaifSnapshot> m_working_snapshot;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };

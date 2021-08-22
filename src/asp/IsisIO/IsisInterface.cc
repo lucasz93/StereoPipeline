@@ -89,7 +89,7 @@ asp::isis::IsisInterface* vw::camera::IsisCameraModel::get_interface() const {
   // No space interfaces - create one.
   {
     // Load the interface outside the write lock. Allows other threads to continue using this method with blocking.
-    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename));
+    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename, m_snapshot));
 
     vw::FastSharedMutex::WriteLock lock(m_lock);
 
@@ -124,7 +124,7 @@ IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared
 
 IsisInterface::~IsisInterface() {}
 
-IsisInterface* IsisInterface::open(std::string const& filename) {
+IsisInterface* IsisInterface::open(std::string const& filename, const Isis::NaifSnapshot& snapshot) {
   // Opening Labels (This should be done somehow though labels)
   Isis::FileName ifilename( QString::fromStdString(filename) );
   boost::shared_ptr<Isis::Pvl> label(new Isis::Pvl(ifilename.expanded()));
@@ -139,16 +139,16 @@ IsisInterface* IsisInterface::open(std::string const& filename) {
   case 0:
     // Framing camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapFrame(label, tempCube, camera);
+      result = new IsisInterfaceMapFrame(label, tempCube, camera, snapshot);
     else
-      result = new IsisInterfaceFrame(label, tempCube, camera);
+      result = new IsisInterfaceFrame(label, tempCube, camera, snapshot);
     break;
   case 2:
     // Linescan camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapLineScan(label, tempCube, camera);
+      result = new IsisInterfaceMapLineScan(label, tempCube, camera, snapshot);
     else
-      result = new IsisInterfaceLineScan(label, tempCube, camera);
+      result = new IsisInterfaceLineScan(label, tempCube, camera, snapshot);
     break;
   case 3:
     // SAR camera (such as MiniRF)

@@ -38,7 +38,7 @@ namespace isis {
   class IsisInterfaceMapLineScan : public IsisInterface {
 
   public:
-    IsisInterfaceMapLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
+    IsisInterfaceMapLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot );
 
     virtual std::string type()  { return "MapLineScan"; }
 
