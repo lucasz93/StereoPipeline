@@ -52,7 +52,7 @@
 #include <asp/IsisIO/Equation.h>
 
 // ISIS
-#include <isis/NaifStatus.h>
+#include <isis/NaifContext.h>
 
 // CSPICE
 #include <cspice/cspice_state.h>
@@ -216,18 +216,16 @@ StereoSessionIsis::StereoSessionIsis() {
   class CreateCSpiceTask : public vw::TaskEventListener {
   public:
     void pre_task(uint64_t id) override {
-      cspice_init();
-      Isis::NaifStatus::Initialize();
+      Isis::NaifContext::createForThread();
     }
 
     void post_task(uint64_t id) override {
-      cspice_shutdown();
+      Isis::NaifContext::destroyForThread();
     }
   };
 
   // Create a local CSPICE context
-  cspice_init();
-  Isis::NaifStatus::Initialize();
+  Isis::NaifContext::createForThread();
 
   // Ensure worker threads have valid CSPICE contexts.
   vw::WorkQueue::add_listener(boost::make_shared<CreateCSpiceTask>());
@@ -235,7 +233,7 @@ StereoSessionIsis::StereoSessionIsis() {
 
 /// Releases memory.
 StereoSessionIsis::~StereoSessionIsis() {
-  cspice_shutdown();
+  Isis::NaifContext::destroyForThread();
 }
 
 /// Returns the target datum to use for a given camera model.

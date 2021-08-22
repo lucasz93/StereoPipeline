@@ -69,52 +69,6 @@ namespace spice {
                   std::string const& planet,
                   std::string const& instrument);
 
-  /// Manages the main lifecycle of f2c'd state.
-  class StateContext {
-  public:
-    StateContext();
-    ~StateContext();
-  };
-
-
-  /// Takes a copy of the current CSpice state.
-  /// Can pass this to threads for them to load copies of the state.
-  class StateSnapshot {
-    friend class PushStateSnapshot;
-    friend class PushStateSnapshotCopy;
-
-    boost::shared_ptr<void> m_snapshot;
-
-  public:
-    StateSnapshot();
-    StateSnapshot(const StateSnapshot &src);
-  };
-
-
-  /// Pushes a copy of the input state onto the CSPICE state stack.
-  /// Pops when out of scope.
-  /// This class is not thread safe. Ensure only 1 thread has set
-  /// the input state as activate.
-  class PushStateSnapshot {
-    boost::shared_ptr<void> m_snapshot;
-    
-  public:
-    PushStateSnapshot(const StateSnapshot& snapshot);
-    ~PushStateSnapshot();
-  };
-
-
-  /// Sets the given snapshot as current.
-  /// Pops when out of scope.
-  /// Duplicating snapshots are thread safe.
-  class PushStateSnapshotCopy {
-    boost::shared_ptr<void> m_snapshot;
-    
-  public:
-    PushStateSnapshotCopy(const StateSnapshot& snapshot);
-    ~PushStateSnapshotCopy();
-  };
-
 }} // namespace asp::spice
 
 #endif // __SPICE_H__

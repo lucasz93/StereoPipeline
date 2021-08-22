@@ -47,8 +47,8 @@ using namespace asp;
 using namespace asp::isis;
 
 // Constructor
-IsisInterfaceMapLineScan::IsisInterfaceMapLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera ) :
-  IsisInterface( label, cube, camera ){//, m_projection( Isis::ProjectionFactory::CreateFromCube(*m_label) ) {
+IsisInterfaceMapLineScan::IsisInterfaceMapLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot ) :
+  IsisInterface( label, cube, camera, snapshot ){//, m_projection( Isis::ProjectionFactory::CreateFromCube(*m_label) ) {
 
   Isis::TProjection* tempProj = (Isis::TProjection*)Isis::ProjectionFactory::CreateFromCube(*m_label);
   m_projection.reset(tempProj);

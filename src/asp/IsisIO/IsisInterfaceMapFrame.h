@@ -45,7 +45,7 @@ namespace isis {
   class IsisInterfaceMapFrame : public IsisInterface {
 
   public:
-    IsisInterfaceMapFrame( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
+    IsisInterfaceMapFrame( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot );
 
     virtual std::string type()  { return "MapFrame"; }
 
