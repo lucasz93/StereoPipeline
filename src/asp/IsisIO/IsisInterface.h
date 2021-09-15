@@ -39,7 +39,6 @@
 #include <asp/SpiceIO/SpiceUtilities.h>
 
 // ISIS
-#include <isis/NaifContext.h>
 namespace Isis {
   class Pvl;
   class Camera;
@@ -59,10 +58,9 @@ namespace isis {
                               // incomplete types from Isis.
 
     virtual std::string type() = 0;
-    boost::shared_ptr<Isis::NaifSnapshot> snapshot() { return m_working_snapshot; }
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
-    static IsisInterface* open( std::string const& filename, const Isis::NaifSnapshot& snapshot );
+    static IsisInterface* open( std::string const& filename );
 
     // Standard Methods
     //------------------------------------------------------
@@ -87,6 +85,11 @@ namespace isis {
     std::string target_name   () const;
     vw::cartography::Datum get_datum(bool use_sphere_for_datum) const;
 
+    // NAIF context management
+    //------------------------------------------------------
+    void acquireNaifContext();
+    void releaseNaifContext();
+
   protected:
     // Standard Variables
     //------------------------------------------------------
@@ -96,8 +99,8 @@ namespace isis {
 
     vw::cartography::Datum m_datum;
     
-    // Current CSPICE state.
-    boost::shared_ptr<Isis::NaifSnapshot> m_working_snapshot;
+    boost::scoped_ptr<Isis::NaifContextLifecycle> m_naif_lifecycle;
+    Isis::NaifContextPtr                          m_naif;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };

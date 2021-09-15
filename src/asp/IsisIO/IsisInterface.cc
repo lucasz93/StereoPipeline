@@ -75,21 +75,36 @@ asp::isis::IsisInterface* vw::camera::IsisCameraModel::get_interface() const {
 
   // No active interfaces - look in the LRU.
   {
-    vw::FastSharedMutex::WriteLock lock(m_lock);
+    boost::shared_ptr<IsisInterface> interface;
 
-    if (m_lru_interfaces.size())
+    // Try and acquire an interface.
     {
-      auto result = m_active_interfaces.insert(std::make_pair(thread_id, m_lru_interfaces.front()));
-      m_lru_interfaces.pop_back();
+      vw::FastSharedMutex::WriteLock lock(m_lock);
 
-      return result.first->second.get();
+      if (m_lru_interfaces.size())
+      {
+        interface = m_lru_interfaces.front();
+        auto result = m_active_interfaces.insert(std::make_pair(thread_id, interface));
+        m_lru_interfaces.pop_back();
+      }
+    }
+
+    // Setup and return the interface.
+    if (interface.get())
+    {
+      // NAIF context construction is expensive. Do it outside the lock.
+      interface->acquireNaifContext();
+      return interface.get();
     }
   }
 
-  // No space interfaces - create one.
+  // No spare interfaces - create one.
   {
-    // Load the interface outside the write lock. Allows other threads to continue using this method with blocking.
-    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename, m_snapshot));
+    // Load the interface outside the write lock. Allows other threads to continue using this method without blocking.
+    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename));
+
+    // NAIF context construction is expensive. Do it outside the lock.
+    interface->acquireNaifContext();
 
     vw::FastSharedMutex::WriteLock lock(m_lock);
 
@@ -99,15 +114,46 @@ asp::isis::IsisInterface* vw::camera::IsisCameraModel::get_interface() const {
 }
 
 void vw::camera::IsisCameraModel::release_interface(uint64_t id) const {
-  vw::FastSharedMutex::WriteLock lock(m_lock);
+  boost::shared_ptr<IsisInterface> interface;
 
-  auto it = m_active_interfaces.find(id);
-  if (it == m_active_interfaces.end())
-    throw std::runtime_error("Releasing an interface not in the active list?!");
+  // Remove the interface from the active list.
+  {
+    vw::FastSharedMutex::WriteLock lock(m_lock);
 
-  m_lru_interfaces.push_back(it->second);
+    auto it = m_active_interfaces.find(id);
+    if (it == m_active_interfaces.end())
+      throw std::runtime_error("Releasing an interface not in the active list?!");
 
-  m_active_interfaces.erase(it);
+    interface = it->second;
+    m_active_interfaces.erase(it);
+  }
+
+  // NAIF context destruction is slow. Do it outside the lock.
+  interface->releaseNaifContext();
+
+  // Add the interface to the cache.
+  {
+    vw::FastSharedMutex::WriteLock lock(m_lock);
+    
+    m_lru_interfaces.push_back(interface);
+  }
+}
+
+void IsisInterface::acquireNaifContext() {
+  if (!m_naif) {
+    m_naif_lifecycle.reset(new Isis::NaifContextLifecycle);
+
+    // IsisInterface instances are restricted to use in the thread they were created.
+    // That allows us to cache the thread local NAIF context pointer.
+    m_naif = Isis::NaifContext::acquire();
+  }
+}
+
+void IsisInterface::releaseNaifContext() {
+  if (!m_naif) {
+    m_naif = nullptr;
+    m_naif_lifecycle.reset(nullptr);
+  }
 }
 
 IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
@@ -115,6 +161,8 @@ IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared
   , m_cube(cube)
   , m_camera(camera)
 {
+  acquireNaifContext();
+
   // Set the datum
   // TODO(oalexan1): This is fragile. Need to find the right internal ISIS
   // function to use to convert ECEF to lon-lat-height and vice-versa.
@@ -181,12 +229,12 @@ std::string IsisInterface::serial_number() const {
 }
 
 double IsisInterface::ephemeris_time(vw::Vector2 const& pix) const {
-  m_camera->SetImage(pix[0]+1, pix[1]+1);
+  m_camera->SetImage(pix[0]+1, pix[1]+1, m_naif);
   return m_camera->time().Et();
 }
 
 vw::Vector3 IsisInterface::sun_position(vw::Vector2 const& pix) const {
-  m_camera->SetImage(pix[0]+1, pix[1]+1);
+  m_camera->SetImage(pix[0]+1, pix[1]+1, m_naif);
   Vector3 sun;
   m_camera->sunPosition(&sun[0]);
   return sun * 1000;

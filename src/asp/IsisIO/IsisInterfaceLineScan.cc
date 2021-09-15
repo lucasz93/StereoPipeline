@@ -40,8 +40,8 @@ using namespace asp;
 using namespace asp::isis;
 
 // Construct
-IsisInterfaceLineScan::IsisInterfaceLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot ) :
-  IsisInterface(label, cube, camera, snapshot), m_alphacube( *m_cube ) {
+IsisInterfaceLineScan::IsisInterfaceLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera ) :
+  IsisInterface(label, cube, camera), m_alphacube( *m_cube ) {
 
   // Gutting Isis::Camera
   m_distortmap = m_camera->DistortionMap();
@@ -54,16 +54,17 @@ IsisInterfaceLineScan::IsisInterfaceLineScan( boost::shared_ptr<Isis::Pvl> &labe
 void IsisInterfaceLineScan::SetTime(Vector2 const& px, bool calc_pose) const {
   if (px != m_c_location) {
     m_c_location = px;
-    m_detectmap->SetParent(m_alphacube.AlphaSample(px[0]),
+    m_detectmap->SetParent(m_naif,
+                           m_alphacube.AlphaSample(px[0]),
                            m_alphacube.AlphaLine(px[1]));
 
     if (calc_pose) {
       // Calculating the spacecraft position and orientation (hence pose)
-      m_camera->instrumentPosition(&m_center[0]);
+      m_camera->instrumentPosition(&m_center[0], m_naif);
       m_center *= 1000;
 
-      std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix();
-      std::vector<double> rot_body = m_camera->bodyRotation()->Matrix();
+      std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix(m_naif);
+      std::vector<double> rot_body = m_camera->bodyRotation()->Matrix(m_naif);
       MatrixProxy<double,3,3> R_inst(&(rot_inst[0]));
       MatrixProxy<double,3,3> R_body(&(rot_body[0]));
       m_pose = Quat(R_body*transpose(R_inst));
@@ -72,6 +73,7 @@ void IsisInterfaceLineScan::SetTime(Vector2 const& px, bool calc_pose) const {
 }
 
 class EphemerisLMA : public vw::math::LeastSquaresModelBase<EphemerisLMA> {
+  Isis::NaifContextPtr m_naif;
   vw::Vector3 m_point;
   Isis::Camera* m_camera;
   Isis::CameraDistortionMap *m_distortmap;
@@ -81,7 +83,8 @@ public:
   typedef vw::Vector<double> domain_type; // Ephemeris time
   typedef vw::Matrix<double> jacobian_type;
 
-  inline EphemerisLMA(vw::Vector3 const& point,
+  inline EphemerisLMA(Isis::NaifContextPtr naif,
+                      vw::Vector3 const& point,
                       Isis::Camera* camera,
                       Isis::CameraDistortionMap* distortmap,
                       Isis::CameraFocalPlaneMap* focalmap) : m_point(point), m_camera(camera), m_distortmap(distortmap), m_focalmap(focalmap) {}
@@ -95,17 +98,17 @@ EphemerisLMA::result_type
 EphemerisLMA::operator()(EphemerisLMA::domain_type const& x) const {
 
   // Setting Ephemeris Time
-  m_camera->setTime(Isis::iTime(x[0]));
+  m_camera->setTime(x[0], m_naif);
 
   // Calculating the look direction in camera frame
   Vector3 instru;
-  m_camera->instrumentPosition(&instru[0]);
+  m_camera->instrumentPosition(&instru[0], m_naif);
   instru *= 1000;  // Spice gives in km
   Vector3 lookB = normalize(m_point - instru);
   std::vector<double> lookB_copy(3);
   std::copy(lookB.begin(), lookB.end(), lookB_copy.begin());
-  std::vector<double> lookJ = m_camera->bodyRotation()->J2000Vector(lookB_copy);
-  std::vector<double> lookC = m_camera->instrumentRotation()->ReferenceVector(lookJ);
+  std::vector<double> lookJ = m_camera->bodyRotation()->J2000Vector(lookB_copy, m_naif);
+  std::vector<double> lookC = m_camera->instrumentRotation()->ReferenceVector(lookJ, m_naif);
   Vector3 look;
   std::copy(lookC.begin(), lookC.end(), look.begin());
 
@@ -127,11 +130,11 @@ IsisInterfaceLineScan::point_to_pixel(Vector3 const& point) const {
 #if 1
    // First seed LMA with an ephemeris time in the middle of the image
   double middle = lines() / 2;
-  m_detectmap->SetParent(1, m_alphacube.AlphaLine(middle));
+  m_detectmap->SetParent(m_naif, 1, m_alphacube.AlphaLine(middle));
   double start_e = m_camera->time().Et();
 
   // Build LMA
-  EphemerisLMA model(point, m_camera.get(), m_distortmap, m_focalmap);
+  EphemerisLMA model(m_naif, point, m_camera.get(), m_distortmap, m_focalmap);
   int status;
   Vector<double> objective(1), start(1);
   start[0] = start_e;
@@ -145,16 +148,16 @@ IsisInterfaceLineScan::point_to_pixel(Vector3 const& point) const {
             << " Unable to project point into ISIS linescan camera ");
 
   // Converting now to pixel
-  m_camera->setTime(Isis::iTime(solution_e[0]));
+  m_camera->setTime(Isis::iTime(solution_e[0]), m_naif);
 
   // Working out pointing
-  m_camera->instrumentPosition(&m_center[0]);
+  m_camera->instrumentPosition(&m_center[0], m_naif);
   m_center *= 1000;
   Vector3 look = normalize(point-m_center);
 
   // Calculating rotation to camera frame
-  std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix();
-  std::vector<double> rot_body = m_camera->bodyRotation()->Matrix();
+  std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix(m_naif);
+  std::vector<double> rot_body = m_camera->bodyRotation()->Matrix(m_naif);
   MatrixProxy<double,3,3> R_inst(&(rot_inst[0]));
   MatrixProxy<double,3,3> R_body(&(rot_body[0]));
   m_pose = Quat(R_body*transpose(R_inst));
