@@ -51,12 +51,6 @@
 #include <asp/IsisIO/DiskImageResourceIsis.h>
 #include <asp/IsisIO/Equation.h>
 
-// ISIS
-#include <isis/NaifContext.h>
-
-// CSPICE
-#include <cspice/cspice_state.h>
-
 // Boost
 #include <boost/filesystem/operations.hpp>
 #include <boost/math/special_functions/next.hpp> // boost::float_next
@@ -209,31 +203,6 @@ void write_preprocessed_isis_image( vw::cartography::GdalWriteOptions const& opt
                             TerminalProgressCallback("asp", "\t  "+tag+":  "));
   }
 
-}
-
-/// Ensures this thread, and all child threads, have a valid CSPICE context.
-StereoSessionIsis::StereoSessionIsis() {
-  class CreateCSpiceTask : public vw::TaskEventListener {
-  public:
-    void pre_task(uint64_t id) override {
-      Isis::NaifContext::createForThread();
-    }
-
-    void post_task(uint64_t id) override {
-      Isis::NaifContext::destroyForThread();
-    }
-  };
-
-  // Create a local CSPICE context
-  Isis::NaifContext::createForThread();
-
-  // Ensure worker threads have valid CSPICE contexts.
-  vw::WorkQueue::add_listener(boost::make_shared<CreateCSpiceTask>());
-}
-
-/// Releases memory.
-StereoSessionIsis::~StereoSessionIsis() {
-  Isis::NaifContext::destroyForThread();
 }
 
 /// Returns the target datum to use for a given camera model.

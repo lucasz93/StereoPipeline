@@ -31,7 +31,6 @@
 #include <asp/SpiceIO/SpiceUtilities.h>
 
 // ISIS
-#include <isis/NaifContext.h>
 namespace Isis {
   class Pvl;
   class Camera;
@@ -45,22 +44,22 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot )
+    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
       : m_label(label)
       , m_cube(cube)
       , m_camera(camera)
-      , m_working_snapshot(boost::make_shared<Isis::NaifSnapshot>(snapshot))
+      , m_naif(nullptr)
     {
+      acquireNaifContext();
     }
 
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
     virtual std::string type() = 0;
-    boost::shared_ptr<Isis::NaifSnapshot> snapshot() { return m_working_snapshot; }
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
-    static IsisInterface* open( std::string const& filename, const Isis::NaifSnapshot& snapshot );
+    static IsisInterface* open( std::string const& filename );
 
     // Standard Methods
     //------------------------------------------------------
@@ -84,6 +83,11 @@ namespace isis {
     vw::Vector3 target_radii  () const;
     std::string target_name   () const;
 
+    // NAIF context management
+    //------------------------------------------------------
+    void acquireNaifContext();
+    void releaseNaifContext();
+
   protected:
     // Standard Variables
     //------------------------------------------------------
@@ -91,8 +95,8 @@ namespace isis {
     boost::shared_ptr<Isis::Camera> m_camera;
     boost::shared_ptr<Isis::Cube  > m_cube;
 
-    // Current CSPICE state.
-    boost::shared_ptr<Isis::NaifSnapshot> m_working_snapshot;
+    boost::scoped_ptr<Isis::NaifContextLifecycle> m_naif_lifecycle;
+    Isis::NaifContextPtr                          m_naif;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };

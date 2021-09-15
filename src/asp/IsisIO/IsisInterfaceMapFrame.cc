@@ -35,8 +35,8 @@ using namespace asp;
 using namespace asp::isis;
 
 // Constructor
-IsisInterfaceMapFrame::IsisInterfaceMapFrame( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot ) :
-  IsisInterface(label, cube, camera, snapshot){// , m_projection( Isis::ProjectionFactory::CreateFromCube( *m_label ) ) {
+IsisInterfaceMapFrame::IsisInterfaceMapFrame( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera ) :
+  IsisInterface(label, cube, camera){// , m_projection( Isis::ProjectionFactory::CreateFromCube( *m_label ) ) {
 
   Isis::TProjection* tempProj = (Isis::TProjection*)Isis::ProjectionFactory::CreateFromCube(*m_label);
   m_projection.reset(tempProj);
@@ -47,12 +47,12 @@ IsisInterfaceMapFrame::IsisInterfaceMapFrame( boost::shared_ptr<Isis::Pvl> &labe
   m_camera->radii( m_radii );
 
   // Calculating Center (just once)
-  m_camera->instrumentPosition(&m_center[0]);
+  m_camera->instrumentPosition(&m_center[0], m_naif);
   m_center *= 1000;
 
   // Calculating Pose (just once)
-  std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix();
-  std::vector<double> rot_body = m_camera->bodyRotation()->Matrix();
+  std::vector<double> rot_inst = m_camera->instrumentRotation()->Matrix(m_naif);
+  std::vector<double> rot_body = m_camera->bodyRotation()->Matrix(m_naif);
   MatrixProxy<double,3,3> R_inst(&(rot_inst[0]));
   MatrixProxy<double,3,3> R_body(&(rot_body[0]));
   m_pose = Quat(R_body*transpose(R_inst));
@@ -65,8 +65,9 @@ IsisInterfaceMapFrame::point_to_pixel( Vector3 const& point ) const {
     lon_lat_radius[0] += 360;
 
   // Projecting into the camera
-  m_groundmap->SetGround(
-    Isis::SurfacePoint( Isis::Latitude ( lon_lat_radius[1], Isis::Angle::Degrees   ),
+  m_groundmap->SetGround(m_naif,
+    Isis::SurfacePoint( m_naif,
+                        Isis::Latitude ( lon_lat_radius[1], Isis::Angle::Degrees   ),
                         Isis::Longitude( lon_lat_radius[0], Isis::Angle::Degrees   ),
                         Isis::Distance ( lon_lat_radius[2], Isis::Distance::Meters ) ) );
   m_distortmap->SetUndistortedFocalPlane( m_groundmap->FocalPlaneX(),
@@ -75,7 +76,8 @@ IsisInterfaceMapFrame::point_to_pixel( Vector3 const& point ) const {
   // Projection back out on to DEM
   m_groundmap->SetFocalPlane( m_distortmap->UndistortedFocalPlaneX(),
                               m_distortmap->UndistortedFocalPlaneY(),
-                              m_distortmap->UndistortedFocalPlaneZ() );
+                              m_distortmap->UndistortedFocalPlaneZ(),
+                              m_naif );
 
   m_projection->SetGround( m_camera->UniversalLatitude(),
                            m_camera->UniversalLongitude() );
@@ -91,7 +93,8 @@ IsisInterfaceMapFrame::pixel_to_vector( Vector2 const& px ) const {
   // lon_lat_radius_to_xyz is the apprioprate choice.
   Vector3 lon_lat_radius( m_projection->UniversalLongitude(),
                           m_projection->UniversalLatitude(),
-                          m_camera->LocalRadius( m_projection->UniversalLatitude(),
+                          m_camera->LocalRadius( m_naif,
+                                                 m_projection->UniversalLatitude(),
                                                  m_projection->UniversalLongitude() ).meters() );
 
   Vector3 point = cartography::lon_lat_radius_to_xyz_estimate(lon_lat_radius); // TODO: INACCURATE!!!

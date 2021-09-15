@@ -28,6 +28,7 @@
 #include <vw/Core/Exception.h>
 #include <vw/Math/Vector.h>
 #include <vw/Math/Quaternion.h>
+#include <isis/NaifContext.h>
 
 namespace asp {
 namespace spice {
@@ -41,17 +42,18 @@ namespace spice {
   const int NAIF_ID_CLEMENTINE( -40    );    // Clementine
 
   // Function prototypes
-  void load_kernels(std::list<std::string> &kernels);
-  void load_kernels(std::string const& kernels_file, std::string const& prefix="");
-  double sclk_to_et(std::string sclk, int naif_id);
-  std::string et_to_utc(double ephemeris_time);
-  double utc_to_et(std::string const& utc);
+  void load_kernels(Isis::NaifContextPtr naif, std::list<std::string> &kernels);
+  void load_kernels(Isis::NaifContextPtr naif, std::string const& kernels_file, std::string const& prefix="");
+  double sclk_to_et(Isis::NaifContextPtr naif, std::string sclk, int naif_id);
+  std::string et_to_utc(Isis::NaifContextPtr naif, double ephemeris_time);
+  double utc_to_et(Isis::NaifContextPtr naif, std::string const& utc);
 
   template <int ElemN>
-  void kernel_param(std::string const& key, vw::Vector<double, ElemN> &value);
-  void kernel_param(std::string const& key, double &value);
+  void kernel_param(Isis::NaifContextPtr naif, std::string const& key, vw::Vector<double, ElemN> &value);
+  void kernel_param(Isis::NaifContextPtr naif, std::string const& key, double &value);
 
-  void body_state(double begin_time, double end_time, double interval,
+  void body_state(Isis::NaifContextPtr naif, 
+                  double begin_time, double end_time, double interval,
                   std::vector<vw::Vector3> &position,
                   std::vector<vw::Vector3> &velocity,
                   std::vector<vw::Quaternion<double> > &pose,
@@ -60,7 +62,8 @@ namespace spice {
                   std::string const& planet,
                   std::string const& instrument);
 
-  void body_state(double time,
+  void body_state(Isis::NaifContextPtr naif, 
+                  double time,
                   vw::Vector3 &position,
                   vw::Vector3 &velocity,
                   vw::Quaternion<double> &pose,

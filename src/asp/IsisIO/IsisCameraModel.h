@@ -33,9 +33,6 @@
 #include <asp/Core/Common.h>
 #include <asp/IsisIO/IsisInterface.h>
 
-// ISIS
-#include <isis/NaifContext.h>
-
 namespace vw {
 namespace camera {
 
@@ -60,94 +57,59 @@ namespace camera {
     //  image plane.  Returns a pixel location (col, row) where the
     //  point appears in the image.
     virtual Vector2 point_to_pixel(Vector3 const& point) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->point_to_pixel( point ); }
+      return get_interface()->point_to_pixel( point ); }
 
     // Returns a (normalized) pointing vector from the camera center
     //  through the position of the pixel 'pix' on the image plane.
     virtual Vector3 pixel_to_vector (Vector2 const& pix) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->pixel_to_vector( pix ); }
+      return get_interface()->pixel_to_vector( pix ); }
 
 
     // Returns the position of the focal point of the camera
     virtual Vector3 camera_center(Vector2 const& pix = Vector2() ) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->camera_center( pix ); }
+      return get_interface()->camera_center( pix ); }
 
     // Pose is a rotation which moves a vector in camera coordinates
     // into world coordinates.
     virtual Quat camera_pose(Vector2 const& pix = Vector2() ) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->camera_pose( pix ); }
+      return get_interface()->camera_pose( pix ); }
 
     // Returns the number of lines is the ISIS cube
     int lines() const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->lines(); }
+      return get_interface()->lines(); }
 
     // Returns the number of samples in the ISIS cube
     int samples() const{
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->samples(); }
+      return get_interface()->samples(); }
 
     // Returns the serial number of the ISIS cube
     std::string serial_number() const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->serial_number(); }
+      return get_interface()->serial_number(); }
 
     // Returns the ephemeris time for a pixel
     double ephemeris_time( Vector2 const& pix = Vector2() ) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->ephemeris_time( pix );
+      return get_interface()->ephemeris_time( pix );
     }
 
     // Sun position in the target frame's inertial frame
     Vector3 sun_position( Vector2 const& pix = Vector2() ) const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->sun_position( pix );
+      return get_interface()->sun_position( pix );
     }
 
     // The three main radii that make up the spheroid. Z is out the polar region.
     Vector3 target_radii() const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->target_radii();
+      return get_interface()->target_radii();
     }
 
     // The spheroid name.
     std::string target_name() const {
-      auto interface = get_interface();
-
-      Isis::PushNaifSnapshot s(interface->snapshot());
-      return interface->target_name();
+      return get_interface()->target_name();
     }
 
     void release_interface(uint64_t id) const;
 
   protected:
     std::string m_cube_filename;
-
-    Isis::NaifSnapshot m_snapshot;
 
     mutable vw::FastSharedMutex m_lock;
 
