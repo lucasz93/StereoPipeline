@@ -31,23 +31,40 @@
 
 // ASP
 #include <asp/Core/Common.h>
+#include <asp/IsisIO/IsisInterfaceCache.h>
 #include <asp/IsisIO/IsisInterface.h>
+
+// ISIS
+#include <isis/NaifContext.h>
 
 namespace vw {
 namespace camera {
 
   // This is largely just a shortened reimplementation of ISIS's
   // Camera.cpp.
-  class IsisCameraModel : public CameraModel {
+  class IsisCameraModel : public CameraModel, public asp::isis::INaifContextListener {
 
   public:
     //------------------------------------------------------------------
     // Constructors / Destructors
     //------------------------------------------------------------------
-    IsisCameraModel(std::string cube_filename) :
-      m_cube_filename(cube_filename) {}
+    IsisCameraModel(const std::string &cube_filename)
+      : m_cube_filename(cube_filename)
+    {
+    }
 
     virtual std::string type() const { return "Isis"; }
+
+    virtual void OnNaifDetach(vw::uint64 thread_id) override {
+      vw::FastSharedMutex::WriteLock lock(m_mutex);
+
+      auto it = m_interfaces.find(thread_id);
+      if (it == m_interfaces.end())
+        throw std::runtime_error("Attempting to interface for unknown thread!");
+
+      asp::isis::IsisInterfaceAllocator::get().release(it->second);
+      m_interfaces.erase(it);
+    }
 
     //------------------------------------------------------------------
     // Methods
@@ -111,24 +128,46 @@ namespace camera {
       return m_interface->get_datum(use_sphere_for_datum);
     }
     
-    void release_interface(uint64_t id) const;
-
   protected:
-    std::string m_cube_filename;
-
-    mutable vw::FastSharedMutex m_lock;
-
-    // Interfaces allocated to a thread.
-    mutable std::unordered_map<uint64_t, boost::shared_ptr<asp::isis::IsisInterface>> m_active_interfaces;
-
-    // Interfaces that have been deallocated.
-    // Ripe for re-allocation.
-    mutable std::vector<boost::shared_ptr<asp::isis::IsisInterface>> m_lru_interfaces;
-    
     friend std::ostream& operator<<( std::ostream&, IsisCameraModel const& );
 
+    //
+    // Honestly, this whole method is pretty dodgy. Not happy with its use of
+    // mutable members, but removing const the const qualifier would mean
+    // modifying every camera in ASP. Not worth it.
+    //
+    asp::isis::IsisInterface* get_interface() const {
+      // Check if an interface for this thread already exists.
+      {
+        vw::FastSharedMutex::ReadLock lock(m_mutex);
+
+        auto it = m_interfaces.find(vw::Thread::id());
+        if (it != m_interfaces.end())
+          return it->second.get();
+      }
+
+      // Interface doesn't exist. Create one.
+      // Very slow - do this outside of any lock.
+      //
+      // This const_cast is safe - we're only adding the pointer into a list.
+      // The non-const pointer is then calls non-const methods at a later time.
+      auto interface = asp::isis::IsisInterfaceAllocator::get().allocate(m_cube_filename, const_cast<IsisCameraModel *>(this));
+
+      // Add the interface to the map.
+      {
+        vw::FastSharedMutex::WriteLock lock(m_mutex);
+        m_interfaces[vw::Thread::id()] = interface;
+      }
+
+      return interface.get();
+    }
+
   private:
-    asp::isis::IsisInterface* get_interface() const;
+    std::string m_cube_filename;
+
+    mutable vw::FastSharedMutex m_mutex;
+
+    mutable std::map<vw::uint64, boost::shared_ptr<asp::isis::IsisInterface>> m_interfaces;
   };
 
   // IOstream interface

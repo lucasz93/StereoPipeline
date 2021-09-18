@@ -40,8 +40,8 @@ using namespace asp;
 using namespace asp::isis;
 
 // Construct
-IsisInterfaceLineScan::IsisInterfaceLineScan( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera ) :
-  IsisInterface(label, cube, camera), m_alphacube( *m_cube ) {
+IsisInterfaceLineScan::IsisInterfaceLineScan( const std::string &filename, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera ) :
+  IsisInterface(filename, label, cube, camera), m_alphacube( *m_cube ) {
 
   // Gutting Isis::Camera
   m_distortmap = m_camera->DistortionMap();
@@ -87,7 +87,7 @@ public:
                       vw::Vector3 const& point,
                       Isis::Camera* camera,
                       Isis::CameraDistortionMap* distortmap,
-                      Isis::CameraFocalPlaneMap* focalmap) : m_point(point), m_camera(camera), m_distortmap(distortmap), m_focalmap(focalmap) {}
+                      Isis::CameraFocalPlaneMap* focalmap) : m_naif(naif), m_point(point), m_camera(camera), m_distortmap(distortmap), m_focalmap(focalmap) {}
 
   inline result_type operator()(domain_type const& x) const;
 };

@@ -44,125 +44,14 @@ using namespace vw;
 using namespace asp;
 using namespace asp::isis;
 
-class InterfaceDeregisterListener : public vw::ThreadEventListener {
-private:
-  const vw::camera::IsisCameraModel* m_camera;
-
-public:
-  InterfaceDeregisterListener(const vw::camera::IsisCameraModel *cam) : m_camera(cam) {}
-
-  void finish(uint64_t id) override {
-    m_camera->release_interface(id);
-  }
-};
-
-asp::isis::IsisInterface* vw::camera::IsisCameraModel::get_interface() const {
-  const auto thread_id = vw::Thread::id();
-
-  // Check if this thread has an active interface.
-  {
-    vw::FastSharedMutex::ReadLock lock(m_lock);
-    auto it = m_active_interfaces.find(thread_id);
-    if (it != m_active_interfaces.end()) {
-      return it->second.get();
-    }
-  }
-
-  // Main thread doesn't have a self pointer.
-  // Guess we'll just let its interface live forever.
-  if (vw::Thread::self())
-    vw::Thread::self()->add_listener(boost::make_shared<InterfaceDeregisterListener>(this));
-
-  // No active interfaces - look in the LRU.
-  {
-    boost::shared_ptr<IsisInterface> interface;
-
-    // Try and acquire an interface.
-    {
-      vw::FastSharedMutex::WriteLock lock(m_lock);
-
-      if (m_lru_interfaces.size())
-      {
-        interface = m_lru_interfaces.front();
-        auto result = m_active_interfaces.insert(std::make_pair(thread_id, interface));
-        m_lru_interfaces.pop_back();
-      }
-    }
-
-    // Setup and return the interface.
-    if (interface.get())
-    {
-      // NAIF context construction is expensive. Do it outside the lock.
-      interface->acquireNaifContext();
-      return interface.get();
-    }
-  }
-
-  // No spare interfaces - create one.
-  {
-    // Load the interface outside the write lock. Allows other threads to continue using this method without blocking.
-    auto interface = boost::shared_ptr<IsisInterface>(IsisInterface::open(m_cube_filename));
-
-    // NAIF context construction is expensive. Do it outside the lock.
-    interface->acquireNaifContext();
-
-    vw::FastSharedMutex::WriteLock lock(m_lock);
-
-    auto result = m_active_interfaces.insert(std::make_pair(thread_id, interface));
-    return result.first->second.get();
-  }
-}
-
-void vw::camera::IsisCameraModel::release_interface(uint64_t id) const {
-  boost::shared_ptr<IsisInterface> interface;
-
-  // Remove the interface from the active list.
-  {
-    vw::FastSharedMutex::WriteLock lock(m_lock);
-
-    auto it = m_active_interfaces.find(id);
-    if (it == m_active_interfaces.end())
-      throw std::runtime_error("Releasing an interface not in the active list?!");
-
-    interface = it->second;
-    m_active_interfaces.erase(it);
-  }
-
-  // NAIF context destruction is slow. Do it outside the lock.
-  interface->releaseNaifContext();
-
-  // Add the interface to the cache.
-  {
-    vw::FastSharedMutex::WriteLock lock(m_lock);
-    
-    m_lru_interfaces.push_back(interface);
-  }
-}
-
-void IsisInterface::acquireNaifContext() {
-  if (!m_naif) {
-    m_naif_lifecycle.reset(new Isis::NaifContextLifecycle);
-
-    // IsisInterface instances are restricted to use in the thread they were created.
-    // That allows us to cache the thread local NAIF context pointer.
-    m_naif = Isis::NaifContext::acquire();
-  }
-}
-
-void IsisInterface::releaseNaifContext() {
-  if (!m_naif) {
-    m_naif = nullptr;
-    m_naif_lifecycle.reset(nullptr);
-  }
-}
-
-IsisInterface::IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
-  : m_label(label)
+IsisInterface::IsisInterface( const std::string &filename, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
+  : m_naif_reference()
+  , m_naif(Isis::NaifContext::acquire())
+  , m_label(label)
   , m_cube(cube)
   , m_camera(camera)
+  , m_filename(filename)
 {
-  acquireNaifContext();
-
   // Set the datum
   // TODO(oalexan1): This is fragile. Need to find the right internal ISIS
   // function to use to convert ECEF to lon-lat-height and vice-versa.
@@ -187,16 +76,16 @@ IsisInterface* IsisInterface::open(std::string const& filename, const Isis::Naif
   case 0:
     // Framing camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapFrame(label, tempCube, camera, snapshot);
+      result = new IsisInterfaceMapFrame(filename, label, tempCube, camera);
     else
-      result = new IsisInterfaceFrame(label, tempCube, camera, snapshot);
+      result = new IsisInterfaceFrame(filename, label, tempCube, camera);
     break;
   case 2:
     // Linescan camera
     if (camera->HasProjection())
-      result = new IsisInterfaceMapLineScan(label, tempCube, camera, snapshot);
+      result = new IsisInterfaceMapLineScan(filename, label, tempCube, camera);
     else
-      result = new IsisInterfaceLineScan(label, tempCube, camera, snapshot);
+      result = new IsisInterfaceLineScan(filename, label, tempCube, camera);
     break;
   case 3:
     // SAR camera (such as MiniRF)

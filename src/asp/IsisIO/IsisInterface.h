@@ -52,15 +52,17 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera, const Isis::NaifSnapshot& snapshot );
+    IsisInterface( const std::string &filename, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera );
 
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
-    virtual std::string type() = 0;
+    virtual std::string   type() = 0;
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
     static IsisInterface* open( std::string const& filename );
+
+    const std::string&    filename() const { return m_filename; }
 
     // Standard Methods
     //------------------------------------------------------
@@ -85,22 +87,19 @@ namespace isis {
     std::string target_name   () const;
     vw::cartography::Datum get_datum(bool use_sphere_for_datum) const;
 
-    // NAIF context management
-    //------------------------------------------------------
-    void acquireNaifContext();
-    void releaseNaifContext();
-
   protected:
     // Standard Variables
     //------------------------------------------------------
+    Isis::NaifContextReference m_naif_reference;
+    Isis::NaifContextPtr       m_naif;
+
     boost::shared_ptr<Isis::Pvl   > m_label;
     boost::shared_ptr<Isis::Camera> m_camera;
     boost::shared_ptr<Isis::Cube  > m_cube;
 
     vw::cartography::Datum m_datum;
-    
-    boost::scoped_ptr<Isis::NaifContextLifecycle> m_naif_lifecycle;
-    Isis::NaifContextPtr                          m_naif;
+
+    std::string m_filename;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
