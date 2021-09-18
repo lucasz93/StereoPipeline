@@ -44,22 +44,25 @@ namespace isis {
 
   class IsisInterface {
   public:
-    IsisInterface( boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
-      : m_label(label)
+    IsisInterface( const std::string &filename, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera )
+      : m_naif_reference()
+      , m_naif(Isis::NaifContext::acquire())
+      , m_label(label)
       , m_cube(cube)
       , m_camera(camera)
-      , m_naif(nullptr)
+      , m_filename(filename)
     {
-      acquireNaifContext();
     }
 
     virtual ~IsisInterface(); // Can't be declared here since we have
                               // incomplete types from Isis.
 
-    virtual std::string type() = 0;
+    virtual std::string   type() = 0;
     
     /// Construct an IsisInterface-derived class of the correct type for the given file.
     static IsisInterface* open( std::string const& filename );
+
+    const std::string&    filename() const { return m_filename; }
 
     // Standard Methods
     //------------------------------------------------------
@@ -83,20 +86,17 @@ namespace isis {
     vw::Vector3 target_radii  () const;
     std::string target_name   () const;
 
-    // NAIF context management
-    //------------------------------------------------------
-    void acquireNaifContext();
-    void releaseNaifContext();
-
   protected:
     // Standard Variables
     //------------------------------------------------------
+    Isis::NaifContextReference m_naif_reference;
+    Isis::NaifContextPtr       m_naif;
+
     boost::shared_ptr<Isis::Pvl   > m_label;
     boost::shared_ptr<Isis::Camera> m_camera;
     boost::shared_ptr<Isis::Cube  > m_cube;
 
-    boost::scoped_ptr<Isis::NaifContextLifecycle> m_naif_lifecycle;
-    Isis::NaifContextPtr                          m_naif;
+    std::string m_filename;
 
     friend std::ostream& operator<<( std::ostream&, IsisInterface* );
   };
