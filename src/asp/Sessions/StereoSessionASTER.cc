@@ -47,33 +47,35 @@ namespace fs = boost::filesystem;
 namespace asp {
 
   /// Fetch the RPC models for aster. We want to use those, for ip matching, as they are faster.
-  void StereoSessionASTER::camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                                         boost::shared_ptr<vw::camera::CameraModel> &cam2){
+  void StereoSessionASTER::camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                                         vw::camera::CameraModelAllocatorPtr &cam2) const{
 
-    boost::shared_ptr<vw::camera::CameraModel> base_cam1, base_cam2;
+    vw::camera::CameraModelAllocatorPtr base_cam1, base_cam2;
     this->camera_models(base_cam1, base_cam2);
 
     // Strip the adjustments
-    boost::shared_ptr<vw::camera::CameraModel> unadj_cam1, unadj_cam2;
-    AdjustedCameraModel* adj_cam1 = dynamic_cast<AdjustedCameraModel*>(base_cam1.get());
-    if (adj_cam1 == NULL) unadj_cam1 = base_cam1;
+    vw::camera::CameraModelPtr unadj_cam1, unadj_cam2;
+    auto adj_cam1_ptr = base_cam1->allocate();
+    AdjustedCameraModel* adj_cam1 = dynamic_cast<AdjustedCameraModel*>(adj_cam1_ptr.get());
+    if (adj_cam1 == NULL) unadj_cam1 = adj_cam1_ptr;
     else                  unadj_cam1 = adj_cam1->unadjusted_model();
-    AdjustedCameraModel* adj_cam2 = dynamic_cast<AdjustedCameraModel*>(base_cam2.get());
-    if (adj_cam2 == NULL) unadj_cam2 = base_cam2;
+    auto adj_cam2_ptr = base_cam2->allocate();
+    AdjustedCameraModel* adj_cam2 = dynamic_cast<AdjustedCameraModel*>(adj_cam2_ptr.get());
+    if (adj_cam2 == NULL) unadj_cam2 = adj_cam2_ptr;
     else                  unadj_cam2 = adj_cam2->unadjusted_model();
     
     
     ASTERCameraModel * aster_cam1 = dynamic_cast<ASTERCameraModel*>(unadj_cam1.get());
     if (aster_cam1 == NULL) vw_throw( ArgumentErr() << "ASTER camera models are expected." );
-    cam1 = aster_cam1->get_rpc_model();
+    cam1 = aster_cam1->get_rpc_allocator();
     
     ASTERCameraModel * aster_cam2 = dynamic_cast<ASTERCameraModel*>(unadj_cam2.get());
     if (aster_cam2 == NULL) vw_throw( ArgumentErr() << "ASTER camera models are expected." );
-    cam2 = aster_cam2->get_rpc_model();
+    cam2 = aster_cam2->get_rpc_allocator();
     
   }
 
-  boost::shared_ptr<vw::camera::CameraModel>  StereoSessionASTER::load_camera_model
+  vw::camera::CameraModelAllocatorPtr  StereoSessionASTER::load_camera_model
     (std::string const& image_file, std::string const& camera_file, Vector2 pixel_offset) const{
 
     return load_adjusted_model(m_camera_loader.load_ASTER_camera_model(camera_file),

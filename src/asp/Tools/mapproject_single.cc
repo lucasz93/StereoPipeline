@@ -509,7 +509,7 @@ void project_image_alpha(Options & opt,
                    GeoReference const& croppedGeoRef,
                    Vector2i     const& virtual_image_size,
                    BBox2i       const& croppedImageBB,
-                   boost::shared_ptr<camera::CameraModel> const& camera_model,
+                   vw::camera::CameraModelAllocatorPtr const& camera_model,
                    Map2CamTransT const& transform) {
 
     // Create handle to input image to be projected on to the map
@@ -574,7 +574,7 @@ void project_image_nodata_pick_transform(Options & opt,
                           Vector2i     const& image_size,
                           Vector2i     const& virtual_image_size,
                           BBox2i       const& croppedImageBB,
-                          boost::shared_ptr<camera::CameraModel> const& camera_model) {
+                          camera::CameraModelAllocatorPtr camera_model) {
   const bool        call_from_mapproject = true;
   if (fs::path(opt.dem_file).extension() != "") {
     // A DEM file was provided
@@ -582,7 +582,7 @@ void project_image_nodata_pick_transform(Options & opt,
                                              virtual_image_size, croppedImageBB,
                                              Map2CamTrans(// Converts coordinates in DEM
                                                           // georeference to camera pixels
-                                                          camera_model.get(), target_georef,
+                                                          camera_model, target_georef,
                                                           dem_georef, opt.dem_file, image_size,
                                                           call_from_mapproject,
                                                           opt.nearest_neighbor));
@@ -592,7 +592,7 @@ void project_image_nodata_pick_transform(Options & opt,
                                              virtual_image_size, croppedImageBB,
                                              Datum2CamTrans(// Converts coordinates in DEM
                                                             // georeference to camera pixels
-                                                            camera_model.get(), target_georef,
+                                                            camera_model, target_georef,
                                                             dem_georef, opt.datum_offset, image_size,
                                                             call_from_mapproject,
                                                             opt.nearest_neighbor));
@@ -607,7 +607,7 @@ void project_image_alpha_pick_transform(Options & opt,
                           Vector2i     const& image_size,
                           Vector2i     const& virtual_image_size,
                           BBox2i       const& croppedImageBB,
-                          boost::shared_ptr<camera::CameraModel> const& camera_model) {
+                          camera::CameraModelAllocatorPtr camera_model) {
   const bool        call_from_mapproject = true;
   if (fs::path(opt.dem_file).extension() != "") {
     // A DEM file was provided
@@ -615,7 +615,7 @@ void project_image_alpha_pick_transform(Options & opt,
                                             virtual_image_size, croppedImageBB, camera_model, 
                                             Map2CamTrans( // Converts coordinates in DEM
                                                           // georeference to camera pixels
-                                                         camera_model.get(), target_georef,
+                                                         camera_model, target_georef,
                                                          dem_georef, opt.dem_file, image_size,
                                                          call_from_mapproject,
                                                          opt.nearest_neighbor)
@@ -626,7 +626,7 @@ void project_image_alpha_pick_transform(Options & opt,
                                             virtual_image_size, croppedImageBB, camera_model, 
                                             Datum2CamTrans( // Converts coordinates in DEM
                                                             // georeference to camera pixels
-                                                           camera_model.get(), target_georef,
+                                                           camera_model, target_georef,
                                                            dem_georef, opt.datum_offset, image_size,
                                                            call_from_mapproject,
                                                            opt.nearest_neighbor)
@@ -660,8 +660,9 @@ int main(int argc, char* argv[]) {
       vw_throw( ArgumentErr() << "Missing output filename.\n" );
 
     // Initialize a camera model
-    boost::shared_ptr<camera::CameraModel> camera_model =
+    auto camera_model_allocator =
       session->camera_model(opt.image_file, opt.camera_file);
+    auto camera_model = camera_model_allocator->allocate();
 
     opt.multithreaded_model = session->supports_multi_threading();
       
@@ -831,28 +832,28 @@ int main(int argc, char* argv[]) {
                                                               croppedGeoRef, image_size, 
                                                               Vector2i(virtual_image_width,
                                                                        virtual_image_height),
-                                                              croppedImageBB, camera_model);
+                                                              croppedImageBB, camera_model_allocator);
         break;
       case VW_CHANNEL_INT16:
         project_image_alpha_pick_transform<PixelRGBA<int16> >(opt, dem_georef, target_georef,
                                                               croppedGeoRef, image_size, 
                                                               Vector2i(virtual_image_width,
                                                                        virtual_image_height),
-                                                              croppedImageBB, camera_model);
+                                                              croppedImageBB, camera_model_allocator);
         break;
       case VW_CHANNEL_UINT16:
         project_image_alpha_pick_transform<PixelRGBA<uint16> >(opt, dem_georef, target_georef,
                                                                croppedGeoRef, image_size, 
                                                                Vector2i(virtual_image_width,
                                                                         virtual_image_height),
-                                                               croppedImageBB, camera_model);
+                                                               croppedImageBB, camera_model_allocator);
         break;
       default:
         project_image_alpha_pick_transform<PixelRGBA<float32> >(opt, dem_georef, target_georef,
                                                                 croppedGeoRef, image_size, 
                                                                 Vector2i(virtual_image_width,
                                                                          virtual_image_height),
-                                                                croppedImageBB, camera_model);
+                                                                croppedImageBB, camera_model_allocator);
         break;
       };
       
@@ -864,7 +865,7 @@ int main(int argc, char* argv[]) {
       project_image_nodata_pick_transform<float>(opt, dem_georef, target_georef, croppedGeoRef,
                                                  image_size, 
                            Vector2i(virtual_image_width, virtual_image_height),
-                           croppedImageBB, camera_model);
+                           croppedImageBB, camera_model_allocator);
     } 
     // Done map projecting!
 

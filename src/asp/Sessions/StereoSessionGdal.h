@@ -74,9 +74,9 @@ namespace asp {
     
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_dg_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -99,9 +99,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_optical_bar_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -144,7 +144,7 @@ namespace asp {
   
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel>
+    virtual vw::camera::CameraModelAllocatorPtr
     load_camera_model(std::string const& image_file, 
                       std::string const& camera_file,
                       vw::Vector2 pixel_offset) const {
@@ -212,14 +212,14 @@ namespace asp {
       // Detect matching interest points between the left and right input images.
       // - The output is written directly to file!
       DiskImageView<float> left_orig_image(left_input_file);
-      boost::shared_ptr<camera::CameraModel> left_cam, right_cam;
+      camera::CameraModelAllocatorPtr left_cam, right_cam;
       this->camera_models(left_cam, right_cam);
       this->ip_matching(left_cropped_file,   right_cropped_file,
                         bounding_box(left_orig_image).size(),
                         left_stats, right_stats,
                         stereo_settings().ip_per_tile,
                         left_nodata_value, right_nodata_value,
-                        left_cam.get(),    right_cam.get(),
+                        left_cam->allocate().get(), right_cam->allocate().get(),
                         match_filename, left_ip_filename, right_ip_filename
                        );
 

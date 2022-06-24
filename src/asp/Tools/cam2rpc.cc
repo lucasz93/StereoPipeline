@@ -222,7 +222,8 @@ int main( int argc, char *argv[] ) {
     // Create the output directory
     vw::create_out_dir(opt.output_rpc);
     
-    boost::shared_ptr<CameraModel> cam = session->camera_model(opt.image_file, opt.camera_file);
+    auto cam_alloc = session->camera_model(opt.image_file, opt.camera_file);
+    auto cam = cam_alloc->allocate();
 
     // Get the input nodata value from the image file, unless the
     // user overwrites it.

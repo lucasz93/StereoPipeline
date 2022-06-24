@@ -57,23 +57,23 @@ namespace asp {
 
     /// Override this function to make sure it properly generates the
     ///  aligned camera models.
-    virtual void camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                               boost::shared_ptr<vw::camera::CameraModel> &cam2) const;
+    virtual void camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                               vw::camera::CameraModelAllocatorPtr &cam2) const;
 
     /// Specialized function to load both camera models and find their output sizes
-    void load_camera_models(boost::shared_ptr<vw::camera::CameraModel> &left_cam,
-                            boost::shared_ptr<vw::camera::CameraModel> &right_cam,
+    void load_camera_models(vw::camera::CameraModelAllocatorPtr &left_cam,
+                            vw::camera::CameraModelAllocatorPtr &right_cam,
                             vw::Vector2i &left_out_size, vw::Vector2i &right_out_size) const;
 
     /// Return the input camera models with no alignment applied.
     /// - This only matters in the epipolar alignment case, where the normal camera model
     ///   functions return the aligned camera models.
-    void get_unaligned_camera_models(boost::shared_ptr<vw::camera::CameraModel> &left_cam,
-                                     boost::shared_ptr<vw::camera::CameraModel> &right_cam) const;
+    void get_unaligned_camera_models(vw::camera::CameraModelAllocatorPtr &left_cam,
+                                     vw::camera::CameraModelAllocatorPtr &right_cam) const;
 
 
     /// Pinhole camera model loading function which handles the case of epipolar alignment.
-    static boost::shared_ptr<vw::camera::CameraModel>
+    static vw::camera::CameraModelAllocatorPtr
     load_adj_pinhole_model(std::string const& image_file,      std::string const& camera_file,
                            std::string const& left_image_file,  std::string const& right_image_file,
                            std::string const& left_camera_file, std::string const& right_camera_file,
@@ -94,9 +94,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const;
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const;
  private:
     /// Helper function for determining image alignment.
     /// - Only used in pre_preprocessing_hook()

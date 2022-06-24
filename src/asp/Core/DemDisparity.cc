@@ -287,8 +287,7 @@ namespace asp {
 
   void produce_dem_disparity( ASPGlobalOptions & opt,
                               boost::shared_ptr<camera::CameraModel> left_camera_model,
-                              boost::shared_ptr<camera::CameraModel> right_camera_model,
-                              std::string session_name
+                              boost::shared_ptr<camera::CameraModel> right_camera_model
                               ) {
 
     if (stereo_settings().is_search_defined())
@@ -362,18 +361,10 @@ namespace asp {
                                                        ));
     std::string disparity_file = opt.out_prefix + "-D_sub.tif";
     vw_out() << "Writing low-resolution disparity: " << disparity_file << "\n";
-    if ( session_name == "isis" ){
-      // ISIS does not support multi-threading
-      boost::scoped_ptr<DiskImageResource> drsrc( vw::cartography::build_gdal_rsrc( disparity_file,
-                                                                        lowres_disparity, opt ) );
-      write_image(*drsrc, lowres_disparity,
-                  TerminalProgressCallback("asp", "\t--> Low-resolution disparity: "));
-    }else{
-      vw::cartography::block_write_gdal_image( disparity_file,
-                                   lowres_disparity,
-                                   opt,
-                                   TerminalProgressCallback("asp", "\t--> Low-resolution disparity:") );
-    }
+    vw::cartography::block_write_gdal_image( disparity_file,
+                                  lowres_disparity,
+                                  opt,
+                                  TerminalProgressCallback("asp", "\t--> Low-resolution disparity:") );
 
     std::string disp_spread_file = opt.out_prefix + "-D_sub_spread.tif";
     vw_out() << "Writing low-resolution disparity spread: " << disp_spread_file << "\n";

@@ -60,9 +60,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_dg_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -82,9 +82,9 @@ namespace asp {
     
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
     return load_rpc_camera_model(image_file, camera_file, pixel_offset);
   }
   
@@ -104,19 +104,13 @@ namespace asp {
     virtual std::string name() const { return "isismapisis"; }
     virtual bool uses_rpc_map_projection() const {return false;}
 
-    /// Only the alternative CSM sensor model for ISIS images supports multi threading.
-    virtual bool supports_multi_threading() const {
-      return (asp::CsmModel::file_has_isd_extension(m_left_camera_file ) && 
-              asp::CsmModel::file_has_isd_extension(m_right_camera_file)   );
-    }
-
     static StereoSession* construct() { return new StereoSessionIsisMapIsis; }
     
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_isis_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -136,9 +130,9 @@ namespace asp {
     
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return StereoSessionPinhole::load_adj_pinhole_model(image_file, camera_file,
                                                           m_left_image_file, m_right_image_file,
                                                           m_left_camera_file, m_right_camera_file,
@@ -160,9 +154,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_optical_bar_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -181,9 +175,9 @@ namespace asp {
 
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_csm_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -201,9 +195,9 @@ namespace asp {
     
    protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_spot5_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }
@@ -222,9 +216,9 @@ namespace asp {
     
   protected:
     /// Function to load a camera model of the particular type.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const {
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const {
       return load_adjusted_model(m_camera_loader.load_ASTER_camera_model(camera_file),
                                  image_file, camera_file, pixel_offset);
     }

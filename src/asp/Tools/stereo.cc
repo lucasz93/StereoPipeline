@@ -720,8 +720,11 @@ namespace asp {
     try {
       // TODO: Remove this extra camera load!
       //       - Some camera models take a long time to load and this causes us to load them twice!
-      boost::shared_ptr<camera::CameraModel> camera_model1, camera_model2;
-      opt.session->camera_models(camera_model1, camera_model2);
+      camera::CameraModelAllocatorPtr camera_model_alloc1, camera_model_alloc2;
+      opt.session->camera_models(camera_model_alloc1, camera_model_alloc2);
+
+      auto camera_model1 = camera_model_alloc1->allocate();
+      auto camera_model2 = camera_model_alloc2->allocate();
 
       Vector3 cam1_ctr = camera_model1->camera_center(Vector2());
       Vector3 cam2_ctr = camera_model2->camera_center(Vector2());

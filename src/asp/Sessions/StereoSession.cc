@@ -325,23 +325,23 @@ namespace asp {
 
       georef.set_geographic();
 
-      boost::shared_ptr<vw::camera::CameraModel> cam = this->camera_model(m_left_image_file,
-                                                                          m_left_camera_file);
+      vw::camera::CameraModelAllocatorPtr cam = this->camera_model(m_left_image_file,
+                                                                   m_left_camera_file);
       bool use_sphere_for_datum = true;       // Spherical datum for non-Earth, as done usually
-      georef.set_datum(this->get_datum(cam.get(), use_sphere_for_datum));
+      georef.set_datum(this->get_datum(cam->allocate().get(), use_sphere_for_datum));
     }
 
     return georef;
   }
 
   // Default implementation of this function.  Derived classes will probably override this.
-  void StereoSession::camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                                    boost::shared_ptr<vw::camera::CameraModel> &cam2) const{
+  void StereoSession::camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                                    vw::camera::CameraModelAllocatorPtr &cam2) const{
     cam1 = camera_model(m_left_image_file,  m_left_camera_file);
     cam2 = camera_model(m_right_image_file, m_right_camera_file);
   }
 
-boost::shared_ptr<vw::camera::CameraModel>
+vw::camera::CameraModelAllocatorPtr
 StereoSession::camera_model(std::string const& image_file, std::string const& camera_file) const{
   
   vw_out() << "Loading camera model: " << image_file << ' ' << camera_file << "\n";
@@ -749,8 +749,8 @@ vw::Vector2 StereoSession::camera_pixel_offset(std::string const& input_dem,
 }
 
 
-boost::shared_ptr<vw::camera::CameraModel>
-StereoSession::load_adjusted_model(boost::shared_ptr<vw::camera::CameraModel> cam,
+vw::camera::CameraModelAllocatorPtr
+StereoSession::load_adjusted_model(vw::camera::CameraModelAllocatorPtr cam,
                                    std::string const& image_file,
                                    std::string const& camera_file,
                                    vw::Vector2 const& pixel_offset){

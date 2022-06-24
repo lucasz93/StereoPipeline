@@ -206,12 +206,6 @@ void write_preprocessed_isis_image( vw::cartography::GdalWriteOptions const& opt
 
 }
 
-
-bool StereoSessionIsis::supports_multi_threading () const {
-  return (asp::CsmModel::file_has_isd_extension(m_left_camera_file ) && 
-          asp::CsmModel::file_has_isd_extension(m_right_camera_file)   );
-}
-
 /// Returns the target datum to use for a given camera model.
 /// Note the parameter use_sphere_for_datum.
 /// During alignment, we'd like to use the most accurate
@@ -238,7 +232,7 @@ vw::cartography::Datum StereoSessionIsis::get_datum(const vw::camera::CameraMode
 
 // TODO: Can we share more code with the DG implementation?
 
-boost::shared_ptr<vw::camera::CameraModel>
+vw::camera::CameraModelAllocatorPtr
 StereoSessionIsis::load_camera_model
       (std::string const& image_file, std::string const& camera_file, Vector2 pixel_offset) const{
 

@@ -28,10 +28,10 @@ ASTERCameraModel::ASTERCameraModel(std::vector< std::vector<vw::Vector2> > const
 				   std::vector< std::vector<vw::Vector3> > const& world_sight_mat,
 				   std::vector<vw::Vector3>                const& sat_pos,
 				   vw::Vector2                             const& image_size,
-				   boost::shared_ptr<vw::camera::CameraModel> rpc_model):
+				   vw::camera::CameraModelAllocatorPtr rpc_allocator):
   m_lattice_mat(lattice_mat), m_sight_mat(sight_mat),
   m_world_sight_mat(world_sight_mat),
-  m_sat_pos(sat_pos), m_image_size(image_size), m_rpc_model(rpc_model){
+  m_sat_pos(sat_pos), m_image_size(image_size), m_rpc_allocator(rpc_allocator){
   
   if (m_lattice_mat.empty() || m_lattice_mat[0].empty()) 
     vw::vw_throw( vw::ArgumentErr() << "Empty matrix of lattice points.\n" );
@@ -195,7 +195,7 @@ vw::Vector2 ASTERCameraModel::point_to_pixel(Vector3 const& point, Vector2 const
   
 
   // Solution with the RPC initial guess
-  Vector2 start_rpc = this->m_rpc_model->point_to_pixel(point);
+  Vector2 start_rpc = this->m_rpc_allocator->allocate()->point_to_pixel(point);
   vw::Vector2 solution2 = vw::math::levenberg_marquardtFixed<vw::camera::CameraGenericLMA, 2,3>(model, start_rpc, objective, status,
 							ABS_TOL, REL_TOL, MAX_ITERATIONS);
   
@@ -240,7 +240,7 @@ vw::Vector3 ASTERCameraModel::pixel_to_vector(vw::Vector2 const& pixel) const{
     
   boost::shared_ptr<ASTERCameraModel>
   load_ASTER_camera_model_from_xml(std::string const& path,
-				   boost::shared_ptr<vw::camera::CameraModel> rpc_model){
+				   vw::camera::CameraModelAllocatorPtr rpc_allocator){
 
   // XYZ coordinates are in the ITRF coordinate frame which means GCC coordinates.
   // - The velocities are in the same coordinate frame, not in some local frame.
@@ -257,7 +257,7 @@ vw::Vector3 ASTERCameraModel::pixel_to_vector(vw::Vector2 const& pixel) const{
 								  xml_reader.m_world_sight_mat,
 								  xml_reader.m_sat_pos,
 								  xml_reader.m_image_size,
-								  rpc_model));
+								  rpc_allocator));
   
 } // End function load_ASTER_camera_model()
 

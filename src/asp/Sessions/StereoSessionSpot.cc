@@ -67,7 +67,7 @@ namespace asp {
     return georef;
   }
 
-  boost::shared_ptr<vw::camera::CameraModel>  StereoSessionSpot::load_camera_model
+  vw::camera::CameraModelAllocatorPtr  StereoSessionSpot::load_camera_model
     (std::string const& image_file, std::string const& camera_file, Vector2 pixel_offset) const{
 
     return load_adjusted_model(m_camera_loader.load_spot5_camera_model(camera_file),

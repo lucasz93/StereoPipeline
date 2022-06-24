@@ -807,8 +807,9 @@ void extract_lon_lat_from_camera(Options & opt, ImageViewRef< PixelMask<float> >
 						       opt.input_camera, opt.input_camera,
 						       out_prefix));
 
-  boost::shared_ptr<CameraModel> camera_model = session->camera_model(opt.image_file,
+  auto camera_model_allocator = session->camera_model(opt.image_file,
 								      opt.input_camera);
+  auto camera_model = camera_model_allocator->allocate();
 
   // Store here pixel values for the rays emanating from the pixels at
   // which we could intersect with the DEM.

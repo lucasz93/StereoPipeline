@@ -75,11 +75,11 @@ namespace asp {
 
 
     /// Helper function that retrieves both cameras.
-    virtual void camera_models(boost::shared_ptr<vw::camera::CameraModel> &cam1,
-                               boost::shared_ptr<vw::camera::CameraModel> &cam2) const;
+    virtual void camera_models(vw::camera::CameraModelAllocatorPtr &cam1,
+                               vw::camera::CameraModelAllocatorPtr &cam2) const;
 
     /// Method that produces a Camera Model from input files.
-    virtual boost::shared_ptr<vw::camera::CameraModel>
+    virtual vw::camera::CameraModelAllocatorPtr
     camera_model(std::string const& image_file,
                  std::string const& camera_file = "") const;
 
@@ -127,8 +127,8 @@ namespace asp {
 
     // If we have adjusted camera models, load them. The adjustment
     // may be in the rotation matrix, camera center, or pixel offset.
-    static boost::shared_ptr<vw::camera::CameraModel>
-    load_adjusted_model(boost::shared_ptr<vw::camera::CameraModel> cam,
+    static vw::camera::CameraModelAllocatorPtr
+    load_adjusted_model(vw::camera::CameraModelAllocatorPtr cam,
                         std::string const& image_file,
                         std::string const& camera_file,
                         vw::Vector2 const& pixel_offset);
@@ -221,7 +221,7 @@ namespace asp {
 
     /// Storage for the camera models used to map project the input images.
     /// - Not used in non map-projected sessions.
-    boost::shared_ptr<vw::camera::CameraModel> m_left_map_proj_model, m_right_map_proj_model;
+    vw::camera::CameraModelAllocatorPtr m_left_map_proj_model, m_right_map_proj_model;
 
   private:
 
@@ -255,16 +255,16 @@ namespace asp {
     tx_type tx_right_map_trans () const;
 
     /// Function to load a specific type of camera model with a pixel offset.
-    virtual boost::shared_ptr<vw::camera::CameraModel> load_camera_model(std::string const& image_file, 
-                                                                         std::string const& camera_file,
-                                                                         vw::Vector2 pixel_offset) const = 0;
+    virtual vw::camera::CameraModelAllocatorPtr load_camera_model(std::string const& image_file, 
+                                                                  std::string const& camera_file,
+                                                                  vw::Vector2 pixel_offset) const = 0;
 
     /// Load an RPC camera model with a pixel offset
     /// - We define it here so it can be used for reading RPC map projection models and also
     ///   so it does not get duplicated in derived RPC sessions.
-    boost::shared_ptr<vw::camera::CameraModel> load_rpc_camera_model(std::string const& image_file, 
-                                                                     std::string const& camera_file,
-                                                                     vw::Vector2 pixel_offset) const;
+    vw::camera::CameraModelAllocatorPtr load_rpc_camera_model(std::string const& image_file, 
+                                                              std::string const& camera_file,
+                                                              vw::Vector2 pixel_offset) const;
   };
 
 // ===========================================================================
