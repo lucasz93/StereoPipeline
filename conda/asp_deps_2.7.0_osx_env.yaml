@@ -1,5 +1,6 @@
 name: asp_deps
 channels:
+  - mechsoft
   - nasa-ames-stereo-pipeline
   - usgs-astrogeology
   - conda-forge
