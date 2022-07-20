@@ -1,5 +1,6 @@
 name: asp
 channels:
+  - mechsoft
   - nasa-ames-stereo-pipeline
   - usgs-astrogeology
   - conda-forge
