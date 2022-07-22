@@ -61,7 +61,7 @@ IsisInterface::IsisInterface( const std::string &filename, boost::shared_ptr<Isi
 
 IsisInterface::~IsisInterface() {}
 
-IsisInterface* IsisInterface::open(std::string const& filename, const Isis::NaifSnapshot& snapshot) {
+IsisInterface* IsisInterface::open(std::string const& filename) {
   // Opening Labels (This should be done somehow though labels)
   Isis::FileName ifilename( QString::fromStdString(filename) );
   boost::shared_ptr<Isis::Pvl> label(new Isis::Pvl(ifilename.expanded()));
@@ -92,7 +92,7 @@ IsisInterface* IsisInterface::open(std::string const& filename, const Isis::Naif
     // The same interface handles both projected and unprojected images,
     // since the ISIS functions take care of the details.
     // TODO(oalexan1): that cam2map-ed images are handled correctly.
-    result = new IsisInterfaceSAR(filename);
+    result = new IsisInterfaceSAR(filename, label, tempCube, camera);
     break;
   default:
     // LRO WAC comes here

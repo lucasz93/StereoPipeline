@@ -44,7 +44,7 @@ namespace isis {
   class IsisInterfaceSAR : public IsisInterface {
 
   public:
-    IsisInterfaceSAR(std::string const& file);
+    IsisInterfaceSAR(std::string const& file, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera);
 
     virtual ~IsisInterfaceSAR() {}
 

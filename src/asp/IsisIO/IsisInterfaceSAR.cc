@@ -46,8 +46,8 @@ using namespace asp;
 using namespace asp::isis;
 
 // Constructor
-IsisInterfaceSAR::IsisInterfaceSAR(std::string const& filename):
-  IsisInterface(filename), m_alphacube(*m_cube) {
+IsisInterfaceSAR::IsisInterfaceSAR(std::string const& filename, boost::shared_ptr<Isis::Pvl> &label, boost::shared_ptr<Isis::Cube> &cube, boost::shared_ptr<Isis::Camera> &camera):
+  IsisInterface(filename, label, cube, camera), m_alphacube(*m_cube) {
 
   // Gutting Isis::Camera
   m_groundmap  = m_camera->GroundMap();
@@ -70,7 +70,8 @@ Vector2 IsisInterfaceSAR::point_to_pixel(Vector3 const& point) const {
 
   // Project into the camera. The ground was set to be the ellipsoid in the constructor.
   if (!m_groundmap->SetGround
-      (Isis::SurfacePoint(Isis::Latitude (lon_lat_radius[1], Isis::Angle::Degrees  ),
+      (m_naif, Isis::SurfacePoint(m_naif,
+                          Isis::Latitude (lon_lat_radius[1], Isis::Angle::Degrees  ),
                           Isis::Longitude(lon_lat_radius[0], Isis::Angle::Degrees  ),
                           Isis::Distance (lon_lat_radius[2], Isis::Distance::Meters))))
     vw_throw(camera::PixelToRayErr() << "Failed in SetGround().");
@@ -104,11 +105,11 @@ Vector3 IsisInterfaceSAR::camera_center(Vector2 const& pix) const {
 
   Vector2 isis_pix = pix + Vector2(1,1);
 
-  if (!m_camera->SetImage(isis_pix[0], isis_pix[1]))
+  if (!m_camera->SetImage(isis_pix[0], isis_pix[1], m_naif))
     vw_throw(camera::PixelToRayErr() << "Failed in SetImage().");
 
   vw::Vector3 center;
-  m_camera->instrumentPosition(&center[0]);
+  m_camera->instrumentPosition(&center[0], m_naif);
   center *= 1000.0; // km to meters
   
   return center;
